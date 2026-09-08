@@ -1,0 +1,153 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Which drugs treat / are used for eczema from gluten allergy or celiac skin manifestations?",
+  "plan_mode": "hybrid",
+  "interpretation": {
+    "archetypes": [
+      "Q11_indication_lookup"
+    ],
+    "restated_question": "Which drugs are used to treat eczema that arises from gluten allergy or celiac skin manifestations?",
+    "intent": "discovery"
+  },
+  "entities": [
+    {
+      "entity_ref": "eczema",
+      "name": "eczema",
+      "biolink_category": "Disease",
+      "is_variable": false,
+      "taxa": [
+        "NCBITaxon:9606"
+      ]
+    },
+    {
+      "entity_ref": "gluten_allergy",
+      "name": "gluten allergy",
+      "biolink_category": "Disease",
+      "is_variable": false,
+      "taxa": [
+        "NCBITaxon:9606"
+      ]
+    },
+    {
+      "entity_ref": "celiac_skin_manifestations",
+      "name": "celiac skin manifestations",
+      "biolink_category": "Disease",
+      "is_variable": false,
+      "taxa": [
+        "NCBITaxon:9606"
+      ]
+    },
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any drug",
+      "biolink_category": "Drug",
+      "is_variable": true
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1",
+      "archetype_tag": "Q11_indication_lookup",
+      "rationale": "Find drugs that are used to treat eczema.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:treats",
+          "object_ref": "eczema",
+          "negated": false,
+          "predicate_expansion": "descendants"
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "Drug",
+      "disabled": false
+    }
+  ],
+  "explanation_queries": [
+    {
+      "query_id": "EQ1",
+      "rationale": "Provide mechanistic or causal context linking eczema to gluten allergy.",
+      "endpoint_a": {
+        "binding_type": "entity",
+        "entity_ref": "eczema"
+      },
+      "endpoint_b": {
+        "binding_type": "entity",
+        "entity_ref": "gluten_allergy"
+      },
+      "max_hops": 4,
+      "return": {
+        "top_k_paths": 5,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    },
+    {
+      "query_id": "EQ2",
+      "rationale": "Provide context linking eczema to celiac skin manifestations.",
+      "endpoint_a": {
+        "binding_type": "entity",
+        "entity_ref": "eczema"
+      },
+      "endpoint_b": {
+        "binding_type": "entity",
+        "entity_ref": "celiac_skin_manifestations"
+      },
+      "max_hops": 4,
+      "return": {
+        "top_k_paths": 5,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "Candidates are ranked based on discovery evidence only.",
+      "discovery": {
+        "strategy": "evidence_weighted",
+        "criteria": [
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": [
+              "knowledge_assertion",
+              "logical_entailment",
+              "observation",
+              "statistical_association"
+            ],
+            "rationale": "Prefer directly asserted or observed evidence while retaining other evidence types."
+          }
+        ],
+        "top_k": 25
+      }
+    },
+    "explanation_ranking": {
+      "strategy": "explanation_diversity",
+      "criteria": [
+        {
+          "name": "distinct_intermediate_categories",
+          "direction": "desc",
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Prefer mechanistically diverse explanation paths."
+        }
+      ],
+      "top_k": 5
+    }
+  },
+  "confidence": {
+    "level": "high",
+    "reasons": [
+      "plan_mode_hybrid_using_Q11_indication_lookup",
+      "all_predicates_recognized",
+      "clear_fixed_and_variable_entities"
+    ]
+  }
+}
