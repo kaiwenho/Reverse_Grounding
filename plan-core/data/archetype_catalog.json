@@ -1,0 +1,673 @@
+{
+  "schema_version": "0.10.0",
+  "catalog_version": "0.5.0",
+  "biolink_reference_version": "4.4.3",
+  "description": "Guidance for classifying drug-repurposing questions into archetypes and translating them into Biolink query plans. When an archetype's `gap_flags` apply, copy each entry into the plan's `gaps` array. When `qualifier_semantics` applies, follow the directional guidance on relevant hops.",
+  "path_syntax_notes": "Paths use the shorthand `Category -[biolink:predicate]-> Category`. Qualifiers on an edge appear inline in braces: `{qualifier=value, ...}`. Interchangeable predicates appear separated by `|`, e.g. `pred1 | pred2`. Multiple edges within one path are separated by ` ; `  on the same line; where a path branches, edges converge on a shared node named identically in both. Suffixes like `_X`, `_Y`, `_1`, `_2` are placeholders distinguishing distinct entities of the same category — the planner substitutes the actual entity name from the question. Templates are structural guides, not literal — adapt them to the specific entities in the question.",
+  "high_priority_predicates": [
+    "biolink:affects",
+    "biolink:gene_associated_with_condition",
+    "biolink:directly_physically_interacts_with",
+    "biolink:physically_interacts_with",
+    "biolink:treats",
+    "biolink:treats_or_applied_or_studied_to_treat",
+    "biolink:has_phenotype",
+    "biolink:has_side_effect",
+    "biolink:has_adverse_event",
+    "biolink:in_clinical_trials_for",
+    "biolink:participates_in",
+    "biolink:in_pathway_with",
+    "biolink:similar_to",
+    "biolink:subclass_of",
+    "biolink:contraindicated_in"
+  ],
+  "predicate_hierarchy_note": "Predicates in Biolink form an is_a hierarchy (e.g. `biolink:regulates` is_a `biolink:affects`). Prefer the most specific predicate that fits the question. If the question is broad or ambiguous, choose an ancestor and set `predicate_expansion: \"descendants\"` on the hop; if the question is specific, use the descendant with `predicate_expansion: \"self_only\"`.",
+  "qualifier_semantics_note": "Emit qualifier blocks only on `biolink:regulates`, `biolink:affects`, or `biolink:interacts_with`, including their active descendants in the loaded Biolink Model. Qualifiers on every other predicate family are rejected by plan validation. Within the supported families, `object_aspect_qualifier` distinguishes the affected aspect: `activity` is common for target modulation and `expression` for signature reversal. `object_direction_qualifier` (`increased`/`decreased`/`upregulated`/`downregulated`) sets the sign. Set `qualified_predicate=biolink:causes` only when the intent is a causal claim. Predicates that encode direction natively should be emitted without a qualifier block unless they also belong to one of the supported families.",
+  "useful_qualifier_values": {
+    "note": "The following qualifier enums have many permissible values in Biolink. For repurposing plans, prefer the values listed below; other values are valid but rare in this domain.",
+    "object_aspect_qualifier": {
+      "for_target_modulation": ["activity"],
+      "for_signature_or_expression": ["expression", "abundance"],
+      "for_localization_or_transport": ["localization", "transport", "secretion"],
+      "for_stability_or_turnover": ["stability", "degradation", "synthesis"]
+    },
+    "causal_mechanism_qualifier": {
+      "common_for_target_based": ["inhibition", "activation", "antagonism", "agonism", "inverse_agonism", "allosteric_modulation"]
+    },
+    "object_direction_qualifier": {
+      "all_used": ["increased", "decreased", "upregulated", "downregulated"]
+    }
+  },
+  "archetypes": [
+    {
+      "tag": "Q1_target_based",
+      "name": "Target-based repurposing",
+      "definition": "Find approved or investigational drugs that modulate a known or disease-linked molecular target. When both a known target and a disease are named, discover drugs from the drug-target relation and assess the fixed target-disease connection independently so missing target-disease data cannot erase otherwise valid target-engaging candidates.",
+      "typical_shape": "Known target: discover ChemicalEntity -> target. Known target plus disease: use the same candidate path plus an independent target-disease explanation query. Disease only: a variable target may bridge ChemicalEntity -> GeneOrGeneProduct -> Disease in one discovery path.",
+      "linguistic_signals": ["target", "modulate", "inhibit", "block", "activate", "bind", "hit"],
+      "example_questions": [
+        "What approved drugs target VEGFR2 and could be repurposed for diabetic retinopathy?",
+        "Which kinase inhibitors could work for idiopathic pulmonary fibrosis?"
+      ],
+      "key_predicates": [
+        "biolink:gene_associated_with_condition",
+        "biolink:target_for",
+        "biolink:directly_physically_interacts_with",
+        "biolink:physically_interacts_with",
+        "biolink:affects",
+        "biolink:regulates",
+        "biolink:has_gene_product"
+      ],
+      "qualifier_semantics": {
+        "when_directional": "Use `object_aspect_qualifier=activity` for target modulation. Set `object_direction_qualifier=decreased` for inhibitors, `increased` for activators/agonists. Set `causal_mechanism_qualifier` to `inhibition`/`antagonism`/`agonism`/`activation`/`allosteric_modulation` when known. Set `qualified_predicate=biolink:causes` to assert the effect is causal, not merely correlational.",
+        "when_omitted": "A bare `biolink:affects` edge is directionally ambiguous. If the question specifies inhibition/activation, dropping qualifiers can return the opposite of what the user wants."
+      },
+      "planning_variants": [
+        {
+          "when": "The target is known and no disease is named",
+          "candidate_query": "Discover candidate drugs with one drug-target hop. Select the predicate from the user's wording; broad 'target' or 'modulate' maps to biolink:affects, while bind, inhibit, or activate justify their corresponding more specific interaction or qualified affects form.",
+          "explanation_query": "None unless the user separately asks for an explanation."
+        },
+        {
+          "when": "Both the target and disease are known",
+          "candidate_query": "Discover candidates using only the drug-target hop. Do not make a fixed target-disease predicate a mandatory hop in candidate discovery.",
+          "explanation_query": "Independently search for paths between the fixed target and disease. This shared context may support interpretation but cannot distinguish or rerank candidate drugs. If no path is found, retain target-engaging candidates and mark disease relevance unverified."
+        },
+        {
+          "when": "The disease is known but the target is unknown",
+          "candidate_query": "Use a connected discovery path in which the target is variable, such as ChemicalEntity -> GeneOrGeneProduct -> Disease.",
+          "explanation_query": "Optional candidate-specific explanations may be attached or used for reranking only when the user's wording requests that behavior."
+        }
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — known target, broad modulation",
+          "hop_count": 1,
+          "template": "SmallMolecule -[biolink:affects]-> Gene",
+          "variant": "general",
+          "rationale": "Use when a named target is known and the wording says only target or modulate. With predicate expansion, the broad affects family can recover supported descendant relations without inventing binding or effect direction."
+        },
+        {
+          "label": "Path B — known target, explicit inhibition",
+          "hop_count": 1,
+          "template": "SmallMolecule -[biolink:affects {qualified_predicate=biolink:causes, object_aspect_qualifier=activity, object_direction_qualifier=decreased, causal_mechanism_qualifier=inhibition}]-> Gene",
+          "variant": "specific",
+          "rationale": "Use only when the user explicitly asks for inhibition, blocking, antagonism, or decreased target activity."
+        },
+        {
+          "label": "Path C — known target, explicit direct binding",
+          "hop_count": 1,
+          "template": "Drug -[biolink:directly_physically_interacts_with]-> GeneOrGeneProduct",
+          "variant": "specific",
+          "rationale": "Use only when the user explicitly asks for binding or direct physical target engagement."
+        },
+        {
+          "label": "Path D — disease only, variable target via target_for",
+          "hop_count": 2,
+          "template": "SmallMolecule -[biolink:affects]-> Gene -[biolink:target_for]-> Disease",
+          "variant": "general",
+          "rationale": "Use when the disease is known but the target Gene is a variable to discover; the target-disease edge is then part of candidate discovery rather than an uncertain relationship between two fixed entities."
+        },
+        {
+          "label": "Path E — disease only, variable associated gene",
+          "hop_count": 2,
+          "template": "SmallMolecule -[biolink:regulates]-> Gene -[biolink:gene_associated_with_condition]-> Disease",
+          "variant": "general",
+          "rationale": "Use when the disease is known and the Gene is variable. The two-hop path discovers both disease-associated targets and compounds that regulate them; it is not appropriate when the gene and disease are both already fixed."
+        }
+      ]
+    },
+    {
+      "tag": "Q2_human_genetics",
+      "name": "Human genetic evidence / Mendelian randomization",
+      "definition": "Find drugs whose targets are supported by human genetic evidence (GWAS, rare variants, Mendelian randomization, eQTL/pQTL) for causal involvement in the disease.",
+      "typical_shape": "Given a disease, identify genes/proteins with causal genetic support, then find drugs targeting them.",
+      "linguistic_signals": ["genetic evidence", "GWAS", "Mendelian randomization", "causal gene", "variant", "genetically supported", "eQTL", "pQTL"],
+      "example_questions": [
+        "Which druggable genes are causally linked to COPD by Mendelian randomization, and are any targeted by licensed drugs?",
+        "Are there drugs targeting Alzheimer's risk genes identified in GWAS?"
+      ],
+      "key_predicates": [
+        "biolink:causes",
+        "biolink:contributes_to",
+        "biolink:gene_associated_with_condition",
+        "biolink:has_sequence_variant",
+        "biolink:directly_physically_interacts_with",
+        "biolink:affects"
+      ],
+      "qualifier_semantics": {
+        "when_directional": "For the drug-gene edge, use `object_aspect_qualifier=activity` and `object_direction_qualifier=decreased` when the disease-causal variant produces gain-of-function (drug should inhibit); use `increased` when loss-of-function (drug should activate).",
+        "when_omitted": "Without direction, the plan cannot distinguish therapeutic from disease-worsening candidates."
+      },
+      "biolink_paths": [
+        {
+          "label": "Path A — canonical 3-hop through SequenceVariant",
+          "hop_count": 3,
+          "template": "SmallMolecule -[biolink:affects | biolink:directly_physically_interacts_with]-> Gene -[biolink:has_sequence_variant]-> SequenceVariant -[biolink:causes | biolink:contributes_to]-> Disease",
+          "variant": "canonical",
+          "rationale": "Variant-level causal edge is the strongest genetic evidence; the gene carries the variant; the drug hits the gene."
+        },
+        {
+          "label": "Path B — 2-hop, gene-level association",
+          "hop_count": 2,
+          "template": "Gene -[biolink:gene_associated_with_condition]-> Disease  ;  Gene -[biolink:has_gene_product]-> GeneProductMixin  ;  Drug -[biolink:directly_physically_interacts_with]-> GeneOrGeneProduct",
+          "variant": "general",
+          "rationale": "Gene-disease association standing in for aggregated genetic evidence."
+        },
+        {
+          "label": "Path C — 2-hop, causal gene",
+          "hop_count": 2,
+          "template": "SmallMolecule -[biolink:affects {object_aspect_qualifier=activity, object_direction_qualifier=decreased}]-> Gene -[biolink:causes | biolink:contributes_to]-> Disease",
+          "variant": "specific",
+          "rationale": "`causes`/`contributes_to` express causal (not merely correlational) gene involvement."
+        },
+        {
+          "label": "Path D — 2-hop, broad genetic link",
+          "hop_count": 2,
+          "template": "Gene -[biolink:gene_associated_with_condition]-> Disease  ;  Gene -[biolink:has_gene_product]-> GeneProductMixin  ;  ChemicalEntity -[biolink:interacts_with]-> GeneOrGeneProduct",
+          "variant": "general",
+          "rationale": "Gene-condition association paired with the broadest molecular-interaction edge."
+        }
+      ],
+      "gap_flags": [
+        {
+          "kind": "biolink_predicate_missing",
+          "description": "Biolink has no MR/GWAS-specific or effect-direction predicate. MR causal direction and effect size cannot be captured in a predicate.",
+          "workaround": "Preserve MR/GWAS evidence metadata such as `supporting_study_cohort`, `supporting_study_size`, `has_evidence`, and returned `knowledge_level`. Recommend how to rank and report this evidence in the plan; do not encode knowledge level as a hard filter unless the user explicitly requests one."
+        }
+      ]
+    },
+    {
+      "tag": "Q3_signature_reversal",
+      "name": "Transcriptomic signature reversal (CMap / LINCS style)",
+      "definition": "Find drugs whose gene-expression perturbation profile reverses the up/down expression signature of the disease.",
+      "typical_shape": "Given an actually available directional signature or explicitly supplied up-regulated/down-regulated gene sets for a disease, discover chemicals that decrease expression of the increased genes and/or increase expression of the decreased genes.",
+      "linguistic_signals": ["reverse the signature", "expression signature", "connectivity", "LINCS", "CMap", "transcriptomic profile", "anti-correlated"],
+      "example_questions": [
+        "Using the available input `tnbc_signature`, a directional human gene signature for triple-negative breast cancer, which drugs are predicted to reverse it?",
+        "The human asthma signature contains the up-regulated genes IL4, IL5, and IL13. Which compounds may reverse it by decreasing their expression?",
+        "Find compounds whose expression profile anti-correlates with the Alzheimer's disease signature."
+      ],
+      "key_predicates": [
+        "biolink:affects"
+      ],
+      "qualifier_semantics": {
+        "when_directional": "For up-regulated disease genes: `object_aspect_qualifier=expression, object_direction_qualifier=decreased` on the drug edge. For down-regulated disease genes: `object_aspect_qualifier=expression, object_direction_qualifier=increased`. `object_aspect_qualifier=expression` distinguishes signature logic from Q1 target modulation (activity).",
+        "when_omitted": "Without `object_aspect_qualifier=expression`, signature paths collapse into target-modulation paths and lose the CMap semantics entirely."
+      },
+      "input_contract": {
+        "inline_members": "When the question itself lists named genes and their source direction, create one fixed Gene entity per named member using its surface name, with no input_binding, and one opposite-direction drug-expression path per member. The resolver grounds those names later; the planner must not invent CURIEs. Inline members without source direction require clarification.",
+        "when_available": "An `input_ref` is available only when it appears in the authoritative available-input manifest. For one directional signature, bind the same input_ref to separate fixed Gene entities and set `direction_filter` on each partition. Explicitly supplied split CURIE lists remain valid as separate `curie_list` bindings.",
+        "when_missing": "If a question merely says that a dataset is supplied but no matching manifest entry or inline values exist, emit a `needs_clarification` refusal asking for the signature. If genes are supplied without their disease/state direction, ask for up/down direction rather than guessing it.",
+        "planner_boundary": "The planner can specify per-gene opposite-direction `biolink:affects` expression paths and recommend aggregation. It cannot invent signature members or directions, model the whole signature as one Biolink node/edge, or calculate the connectivity score through ordinary KG traversal."
+      },
+      "biolink_paths": [
+        {
+          "label": "Partial Path A — fixed up-gene member or input partition, direction-matched",
+          "hop_count": 1,
+          "template": "SmallMolecule -[biolink:affects {qualified_predicate=biolink:causes, object_aspect_qualifier=expression, object_direction_qualifier=decreased}]-> Gene_UpInput",
+          "variant": "proxy",
+          "rationale": "For an inline member stated as increased/up-regulated, create a fixed Gene entity using its surface name. For an available dataset, select its increased partition instead. Then find drugs that decrease each gene's expression."
+        },
+        {
+          "label": "Partial Path B — fixed down-gene member or input partition, direction-matched",
+          "hop_count": 1,
+          "template": "SmallMolecule -[biolink:affects {qualified_predicate=biolink:causes, object_aspect_qualifier=expression, object_direction_qualifier=increased}]-> Gene_DownInput",
+          "variant": "proxy",
+          "rationale": "For an inline member stated as decreased/down-regulated, create a fixed Gene entity using its surface name. For an available dataset, select its decreased partition instead. Then find drugs that increase each gene's expression."
+        }
+      ],
+      "gap_flags": [
+        {
+          "kind": "biolink_predicate_missing",
+          "description": "Biolink has NO predicate for a gene-expression *signature* object, nor for 'reverses signature'/'anti-correlated signature'. Signature reversal is a computed score, not a single edge.",
+          "workaround": "When named genes and source directions are inline, use one fixed surface-name Gene entity and opposite-direction `biolink:affects` expression path per member. When an external input is actually available, bind each source-direction partition through `Entity.input_binding` (using `direction_filter` for a directional signature). Omit gene-to-disease query hops. The chosen query workflow must aggregate a connectivity-style score. If neither inline directional members nor an available signature input exists, refuse with `needs_clarification` rather than inventing identifiers or an input reference."
+        }
+      ]
+    },
+    {
+      "tag": "Q4_side_effect",
+      "name": "Side-effect / off-target repurposing",
+      "definition": "Find drugs whose side-effect or phenotypic profile suggests therapeutic activity against the disease (the sildenafil-style discovery).",
+      "typical_shape": "Given a disease with characteristic phenotypes, discover drugs whose observed side effects match the therapeutic phenotype needed.",
+      "linguistic_signals": ["side effect", "adverse event", "phenotypic", "unexpected benefit", "off-target"],
+      "example_questions": [
+        "Which drugs have side-effect profiles similar to known antidepressants?",
+        "Are there drugs whose adverse events suggest they might treat pulmonary hypertension?"
+      ],
+      "key_predicates": [
+        "biolink:has_phenotype",
+        "biolink:has_side_effect",
+        "biolink:has_adverse_event",
+        "biolink:phenotype_of",
+        "biolink:affects",
+        "biolink:gene_associated_with_condition"
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — 2-hop phenotype bridge",
+          "hop_count": 2,
+          "template": "Disease -[biolink:has_phenotype]-> PhenotypicFeature  ;  Drug -[biolink:has_side_effect]-> PhenotypicFeature",
+          "variant": "general",
+          "rationale": "A side effect matching a beneficial phenotypic change hints at therapeutic action (sildenafil logic)."
+        },
+        {
+          "label": "Path B — 2-hop adverse-event variant",
+          "hop_count": 2,
+          "template": "Drug -[biolink:has_adverse_event]-> DiseaseOrPhenotypicFeature  ;  Disease -[biolink:has_phenotype]-> PhenotypicFeature",
+          "variant": "general",
+          "rationale": "Same bridge but via the adverse-event predicate."
+        },
+        {
+          "label": "Path C — 3-hop mechanism-anchored",
+          "hop_count": 3,
+          "template": "Drug -[biolink:has_side_effect]-> PhenotypicFeature -[biolink:phenotype_of]-> Gene -[biolink:gene_associated_with_condition]-> Disease",
+          "variant": "specific",
+          "rationale": "Connects a phenotype signal to a shared molecular target through the disease's causal gene."
+        }
+      ],
+      "gap_flags": [
+        {
+          "kind": "biolink_predicate_missing",
+          "description": "Biolink has no predicate asserting 'side effect implies efficacy'. The therapeutic implication is inferential — Biolink supplies the phenotype-sharing edges only.",
+          "workaround": "Emit the phenotype-bridge paths above; note in `gaps` that the therapeutic inference is downstream."
+        }
+      ]
+    },
+    {
+      "tag": "Q5_disease_similarity",
+      "name": "Disease-similarity / phenotype-based repurposing",
+      "definition": "Find drugs approved for a disease that is similar to the disease of interest (by shared genes, pathways, or phenotypes) and might work for the disease of interest as well.",
+      "typical_shape": "Given a disease, identify similar diseases and borrow drugs approved or studied for those.",
+      "linguistic_signals": ["similar disease", "related condition", "shared pathology", "phenotypically similar", "same pathway"],
+      "example_questions": [
+        "Which autoimmune diseases share genetic overlap with psoriasis, and what biologics for those could be repurposed?",
+        "Find drugs approved for conditions similar to primary sclerosing cholangitis."
+      ],
+      "key_predicates": [
+        "biolink:has_phenotype",
+        "biolink:similar_to",
+        "biolink:subclass_of",
+        "biolink:gene_associated_with_condition",
+        "biolink:in_pathway_with",
+        "biolink:treats",
+        "biolink:studied_to_treat",
+        "biolink:treats_or_applied_or_studied_to_treat"
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — 3-hop phenotype similarity",
+          "hop_count": 3,
+          "template": "Disease_X -[biolink:has_phenotype]-> PhenotypicFeature ; Disease_Y -[biolink:has_phenotype]-> PhenotypicFeature ;  Drug -[biolink:treats]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "Shared phenotypes define similarity; borrow drugs approved for the similar disease."
+        },
+        {
+          "label": "Path B — 2-hop explicit similarity",
+          "hop_count": 2,
+          "template": "Disease_X -[biolink:similar_to]-> Disease_Y  ;  Drug -[biolink:treats | biolink:studied_to_treat | biolink:treats_or_applied_or_studied_to_treat]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "`similar_to` directly asserts disease similarity."
+        },
+        {
+          "label": "Path C — 3-hop shared gene",
+          "hop_count": 3,
+          "template": "Gene -[biolink:gene_associated_with_condition]-> Disease_X  ;  Gene -[biolink:gene_associated_with_condition]-> Disease_Y  ;  Drug -[biolink:treats]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "Shared causal gene as similarity axis."
+        },
+        {
+          "label": "Path D — 3-hop shared pathway",
+          "hop_count": 3,
+          "template": "Gene_1 -[biolink:gene_associated_with_condition]-> Disease_X  ;  Gene_1 -[biolink:in_pathway_with]-> Gene_2 -[biolink:gene_associated_with_condition]-> Disease_Y  ;  Drug -[biolink:treats]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "Pathway-level similarity."
+        },
+        {
+          "label": "Path E — 3-hop subclass ancestry",
+          "hop_count": 3,
+          "template": "Disease_X -[biolink:subclass_of]-> Disease_parent  ;   Disease_Y -[biolink:subclass_of]-> Disease_parent  ;  Drug -[biolink:treats]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "Ontological sibling diseases."
+        }
+      ]
+    },
+    {
+      "tag": "Q6_pathway_moa",
+      "name": "Mechanism-of-action & pathway-based repurposing",
+      "definition": "Find drugs that modulate a pathway or biological process dysregulated in the disease.",
+      "typical_shape": "Given a disease, identify implicated pathways/processes and find drugs affecting genes or activities in those pathways.",
+      "linguistic_signals": ["pathway", "mechanism of action", "MoA", "biological process", "signalling", "dysregulated"],
+      "example_questions": [
+        "Which drugs target the Hedgehog pathway that could be repurposed for basal cell carcinoma?",
+        "Find compounds affecting the AMPK pathway for metabolic disease repurposing."
+      ],
+      "key_predicates": [
+        "biolink:gene_associated_with_condition",
+        "biolink:participates_in",
+        "biolink:actively_involved_in",
+        "biolink:enables",
+        "biolink:affects",
+        "biolink:in_pathway_with",
+        "biolink:acts_upstream_of_positive_effect",
+        "biolink:acts_upstream_of_negative_effect"
+      ],
+      "qualifier_semantics": {
+        "when_directional": "Use `object_aspect_qualifier=activity` (NOT `expression`) when the drug is meant to modulate function within the pathway. `causal_mechanism_qualifier` should match the intended pathway effect (e.g., `inhibition` to dampen a hyperactive pathway).",
+        "when_omitted": "Without qualifiers, plans may retrieve drugs that push the pathway in the disease-worsening direction."
+      },
+      "biolink_paths": [
+        {
+          "label": "Path A — 3-hop through pathway",
+          "hop_count": 3,
+          "template": "Gene -[biolink:gene_associated_with_condition]-> Disease  ;  Gene -[biolink:participates_in | biolink:actively_involved_in | biolink:enables]-> Pathway  ;  SmallMolecule -[biolink:affects]-> Gene",
+          "variant": "general",
+          "rationale": "Connects disease gene → pathway → modulating drug."
+        },
+        {
+          "label": "Path B — 3-hop through shared process",
+          "hop_count": 3,
+          "template": "Gene1 -[biolink:gene_associated_with_condition]-> Disease  ;  Gene1 -[biolink:actively_involved_in]-> BiologicalProcess  ;  Drug -[biolink:directly_physically_interacts_with]-> Gene2 -[biolink:actively_involved_in]-> BiologicalProcess",
+          "variant": "specific",
+          "rationale": "Drug acts on a different node in the same dysregulated process."
+        },
+        {
+          "label": "Path C — 2-hop direct process effect",
+          "hop_count": 2,
+          "template": "SmallMolecule -[biolink:affects]-> BiologicalProcess -[biolink:has_participant]-> Gene",
+          "variant": "specific",
+          "rationale": "Chemical directly affecting a biological process."
+        },
+        {
+          "label": "Path D — pathway membership",
+          "hop_count": 2,
+          "template": "Gene_diseaseX -[biolink:in_pathway_with]-> Gene_target  ;  Drug -[biolink:directly_physically_interacts_with | biolink:affects]-> Gene_target",
+          "variant": "specific",
+          "rationale": "`in_pathway_with` (symmetric) groups genes in one pathway; useful shortcut."
+        },
+        {
+          "label": "Path E — upstream regulator with direction",
+          "hop_count": 2,
+          "template": "Gene -[biolink:acts_upstream_of_positive_effect | biolink:acts_upstream_of_negative_effect]-> BiologicalProcess  ;  Drug -[biolink:affects {object_aspect_qualifier=activity, object_direction_qualifier=<opposite of disease direction>}]-> Gene",
+          "variant": "specific",
+          "rationale": "Directional upstream control."
+        }
+      ]
+    },
+    {
+      "tag": "Q7_real_world_evidence",
+      "name": "Real-world evidence / EHR-based repurposing",
+      "definition": "Find drugs associated in observational data (EHR, claims, patient reports) with improved outcomes in patients with the disease, or explain the mechanism behind a known RWE signal.",
+      "typical_shape": "Two variants. Discovery: which drugs are associated with better outcomes in disease X? Explanation: given a known RWE association (drug Y helps disease X), what mechanism paths exist?",
+      "linguistic_signals": ["real-world", "observational", "EHR", "claims data", "why does X help Y", "explain the association"],
+      "example_questions": [
+        "In claims data, is metformin use associated with reduced dementia incidence?",
+        "Why might metformin be beneficial in Alzheimer's disease? Show me the mechanistic paths."
+      ],
+      "key_predicates": [
+        "biolink:applied_to_treat",
+        "biolink:ameliorates_condition",
+        "biolink:associated_with_decreased_likelihood_of",
+        "biolink:associated_with_increased_likelihood_of"
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — 2-hop, use + likelihood",
+          "hop_count": 2,
+          "template": "Drug -[biolink:applied_to_treat]-> Disease  ;  Drug -[biolink:associated_with_decreased_likelihood_of]-> DiseaseOrPhenotypicFeature",
+          "variant": "specific",
+          "rationale": "`applied_to_treat` records real-world administration (FAERS/AEOLUS-style); `associated_with_decreased_likelihood_of` encodes a statistically observed reduction."
+        },
+        {
+          "label": "Path B — 1-hop observed benefit",
+          "hop_count": 1,
+          "template": "Drug -[biolink:ameliorates_condition]-> Disease",
+          "variant": "general",
+          "rationale": "Observed symptom amelioration."
+        },
+        {
+          "label": "Path C — 1-hop with association-slot carriage",
+          "hop_count": 1,
+          "template": "Drug -[biolink:applied_to_treat {edge properties: concept_pair_count, relative_frequency_subject, ln_ratio, supporting_study_cohort, supporting_study_size}]-> Disease",
+          "variant": "specific",
+          "rationale": "This is where EHR/RWE lives — Biolink carries observational co-occurrence statistics as association slots (COHD pattern), NOT as predicates. Encode as `edge_filters` on the hop."
+        }
+      ],
+      "gap_flags": [
+        {
+          "kind": "biolink_predicate_missing",
+          "description": "No Biolink predicate literally means 'improves clinical outcome in observational data'. RWE outcomes must be inferred from `applied_to_treat` / `ameliorates_condition` / `associated_with_decreased_likelihood_of` plus cohort edge properties.",
+          "workaround": "Use the paths above; add edge_filters for cohort/likelihood slots; record this as a `gaps` entry."
+        }
+      ]
+    },
+    {
+      "tag": "Q8_drug_combination",
+      "name": "Drug combination / synergy",
+      "definition": "Find drug pairs predicted to synergize against the disease or its targets, or explain a shared mechanism between two candidate drugs.",
+      "typical_shape": "Given a disease and/or a lead drug, identify partner drugs likely to synergize; or given two named drugs, find shared-target/pathway paths.",
+      "linguistic_signals": ["synergy", "combination", "combine with", "co-treatment", "shared mechanism between"],
+      "example_questions": [
+        "Which approved drugs synergize with a specific tyrosine-kinase inhibitor in EGFR-mutant lung cancer?",
+        "Do metformin and rapamycin share a common mechanistic route?"
+      ],
+      "key_predicates": [
+        "biolink:directly_physically_interacts_with",
+        "biolink:in_pathway_with",
+        "biolink:genetically_interacts_with",
+        "biolink:pharmacologically_interacts_with"
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — shared-target proxy, 3-hop",
+          "hop_count": 3,
+          "template": "Drug_1 -[biolink:directly_physically_interacts_with]-> Gene_A  ;  Drug_2 -[biolink:directly_physically_interacts_with]-> Gene_B  ;  Gene_A -[biolink:in_pathway_with | biolink:genetically_interacts_with]-> Gene_B",
+          "variant": "proxy",
+          "rationale": "Two drugs hitting interacting/co-pathway targets is a structural proxy for combination rationale."
+        },
+        {
+          "label": "Path B — pharmacologic interaction (CAUTION)",
+          "hop_count": 1,
+          "template": "Drug_1 -[biolink:pharmacologically_interacts_with]-> Drug_2",
+          "variant": "proxy",
+          "rationale": "Represents PK/PD drug-drug interaction — often SAFETY risk, NOT therapeutic synergy. Do NOT use for synergy discovery; useful only for Q9 safety context."
+        }
+      ],
+      "gap_flags": [
+        {
+          "kind": "biolink_predicate_missing",
+          "description": "Biolink has NO `synergizes_with` / drug-combination / combination-therapy predicate. Therapeutic synergy cannot be asserted directly.",
+          "workaround": "Emit the shared-target proxy path (Path A). Note in `gaps` that synergy scoring is a computed edge outside the Biolink predicate set."
+        }
+      ]
+    },
+    {
+      "tag": "Q9_safety_pk",
+      "name": "Safety, contraindications, PK suitability",
+      "definition": "For a candidate repurposed drug, identify contraindications, adverse events, and PK properties relevant to the new indication's patient population.",
+      "typical_shape": "Given a specific drug (and often a disease/population context), retrieve contraindications, adverse-event profile, drug-drug interactions, metabolism, and PK constraints.",
+      "linguistic_signals": ["contraindicated", "adverse event", "side effect", "drug interaction", "safe in", "PK", "pharmacokinetics"],
+      "example_questions": [
+        "What are the contraindications and adverse events of itraconazole for use in glioblastoma?",
+        "Does drug X cross the blood-brain barrier and what are its major drug-drug interactions?"
+      ],
+      "key_predicates": [
+        "biolink:contraindicated_in",
+        "biolink:has_adverse_event",
+        "biolink:has_side_effect",
+        "biolink:has_metabolite",
+        "biolink:is_substrate_of",
+        "biolink:pharmacologically_interacts_with"
+      ],
+      "biolink_paths": [
+        {
+          "label": "Path A — 1-hop contraindication",
+          "hop_count": 1,
+          "template": "Drug -[biolink:contraindicated_in]-> BiologicalEntity",
+          "variant": "specific",
+          "rationale": "Direct contraindication; inverse `has_contraindication`; opposite_of `treats`."
+        },
+        {
+          "label": "Path B — 1-hop adverse events",
+          "hop_count": 1,
+          "template": "Drug -[biolink:has_adverse_event {qualified_predicate=biolink:causes}]-> DiseaseOrPhenotypicFeature",
+          "variant": "general",
+          "rationale": "Safety liabilities. `has_adverse_event` is an active descendant of `affects`, and its Biolink association class includes `qualified_predicate` through the entity-to-feature-or-disease qualifier mixin. Use `qualified_predicate=biolink:causes` only when supported by the intended evidence."
+        },
+        {
+          "label": "Path C — 1-hop side effects",
+          "hop_count": 1,
+          "template": "Drug -[biolink:has_side_effect]-> DiseaseOrPhenotypicFeature",
+          "variant": "specific",
+          "rationale": "Milder AE profile."
+        },
+        {
+          "label": "Path D — 2-hop population overlap",
+          "hop_count": 2,
+          "template": "Drug -[biolink:contraindicated_in]-> Disease_comorbid  ;  Disease_X -[biolink:has_phenotype]-> Disease_comorbid",
+          "variant": "specific",
+          "rationale": "Flags candidates unsafe in the target disease's typical comorbid population."
+        },
+        {
+          "label": "Path E — metabolism/PK",
+          "hop_count": 3,
+          "template": "Drug -[biolink:has_metabolite]-> MolecularEntity  ;  Drug -[biolink:is_substrate_of]-> Protein  ;  Drug -[biolink:pharmacologically_interacts_with]-> Drug_comed",
+          "variant": "specific",
+          "rationale": "PK properties are captured via metabolite, substrate, and DDI predicates."
+        }
+      ]
+    },
+    {
+      "tag": "Q10_clinical_trial_landscape",
+      "name": "Clinical trial landscape",
+      "definition": "Find drugs already being studied in clinical trials for the disease of interest or for closely related conditions, including prior failures.",
+      "typical_shape": "Given a disease, retrieve drugs with `in_clinical_trials_for` or `studied_to_treat` edges, and drugs in trials for similar conditions.",
+      "linguistic_signals": ["clinical trial", "in trials", "being studied", "phase 2", "phase 3", "trial for", "ClinicalTrials.gov"],
+      "example_questions": [
+        "Which drugs are in late-stage trials for pancreatic cancer?",
+        "What non-oncology drugs are being repurposed in cancer trials?"
+      ],
+      "key_predicates": [
+        "biolink:in_clinical_trials_for",
+        "biolink:treats_or_applied_or_studied_to_treat",
+        "biolink:studied_to_treat",
+        "biolink:beneficial_in_models_for",
+        "biolink:similar_to",
+        "biolink:subclass_of"
+      ],
+      "predicate_selection_note": "Use weaker predicates for repurposing hypotheses — `in_clinical_trials_for`, `studied_to_treat`, `beneficial_in_models_for`. RESERVE `treats` for approved indications only. This matches Biolink's own guidance: 'Treats edges should be asserted only in cases where there is strong supporting evidence… In the absence of such evidence, weaker predicates should be used.'",
+      "biolink_paths": [
+        {
+          "label": "Path A — 1-hop trial evidence",
+          "hop_count": 1,
+          "template": "Drug -[biolink:in_clinical_trials_for]-> Disease",
+          "variant": "specific",
+          "rationale": "Direct trial evidence; inverse `tested_by_clinical_trials_of`."
+        },
+        {
+          "label": "Path B — 1-hop grouping (catch-all)",
+          "hop_count": 1,
+          "template": "Drug -[biolink:treats_or_applied_or_studied_to_treat]-> Disease",
+          "variant": "general",
+          "rationale": "The broadest catch-all predicate; returns trial + studied + applied edges in one query via `predicate_expansion=descendants`."
+        },
+        {
+          "label": "Path C — 1-hop study",
+          "hop_count": 1,
+          "template": "Drug -[biolink:studied_to_treat]-> Disease",
+          "variant": "specific",
+          "rationale": "Reports that one or more scientific study has been performed to test the substance for the condition."
+        },
+        {
+          "label": "Path D — 2-hop related conditions",
+          "hop_count": 2,
+          "template": "Disease_X -[biolink:similar_to | biolink:subclass_of]-> Disease_Y  ;  Drug -[biolink:in_clinical_trials_for]-> Disease_Y",
+          "variant": "specific",
+          "rationale": "Extend to closely related conditions."
+        },
+        {
+          "label": "Path E — 1-hop preclinical",
+          "hop_count": 1,
+          "template": "Drug -[biolink:beneficial_in_models_for]-> Disease",
+          "variant": "specific",
+          "rationale": "Preclinical model evidence preceding trials."
+        }
+      ]
+    },
+    {
+      "tag": "Q11_indication_lookup",
+      "name": "Indication lookup / established treatments",
+      "definition": "Find drugs that are established, approved, or otherwise used to treat the disease or symptom of interest. This is a direct lookup of existing indications, not a search for novel repurposing candidates.",
+      "typical_shape": "Given a disease, phenotype, or symptom, return drugs connected to it by a therapeutic predicate. The simplest and most common query shape.",
+      "linguistic_signals": ["what drugs treat", "which drugs are used for", "how to treat", "how can I relieve", "medication for", "therapy for", "treatment options", "drugs indicated for", "what is prescribed for"],
+      "example_questions": [
+        "Which drugs treat dermatitis herpetiformis?",
+        "What medications are used for pulmonary arterial hypertension?"
+      ],
+      "key_predicates": [
+        "biolink:treats",
+        "biolink:treats_or_applied_or_studied_to_treat",
+        "biolink:applied_to_treat",
+        "biolink:ameliorates_condition",
+        "biolink:preventative_for_condition",
+        "biolink:has_phenotype",
+        "biolink:subclass_of"
+      ],
+      "predicate_selection_note": "Unlike the repurposing archetypes, `biolink:treats` IS appropriate here — this archetype asks specifically about established indications. Use `biolink:treats` for approved/established therapy. Use the grouping predicate `biolink:treats_or_applied_or_studied_to_treat` with `predicate_expansion: \"descendants\"` when the question is broad ('what is used for X') and should also surface applied/studied/trial-stage agents. Distinguish this archetype from Q10: Q10 asks about the *trial landscape* (what is being studied), Q11 asks what is *already used*.",
+      "biolink_paths": [
+        {
+          "label": "Path A — 1-hop established treatment",
+          "hop_count": 1,
+          "template": "Drug -[biolink:treats]-> Disease",
+          "variant": "specific",
+          "rationale": "Direct approved/established indication. Subject is the drug; the disease is the object."
+        },
+        {
+          "label": "Path B — 1-hop broad therapeutic lookup",
+          "hop_count": 1,
+          "template": "Drug -[biolink:treats_or_applied_or_studied_to_treat]-> Disease",
+          "variant": "general",
+          "rationale": "Grouping predicate; with `predicate_expansion: \"descendants\"` returns established, applied, studied, and trial-stage agents in one query. Preferred when the question is broadly phrased."
+        },
+        {
+          "label": "Path C — 1-hop symptom relief",
+          "hop_count": 1,
+          "template": "Drug -[biolink:ameliorates_condition]-> DiseaseOrPhenotypicFeature",
+          "variant": "specific",
+          "rationale": "For questions phrased around relieving or easing a symptom rather than curing a disease."
+        },
+        {
+          "label": "Path D — 2-hop via phenotype",
+          "hop_count": 2,
+          "template": "Drug -[biolink:treats]-> Disease -[biolink:has_phenotype]-> PhenotypicFeature",
+          "variant": "specific",
+          "rationale": "When the user names a symptom/phenotype rather than a disease, find drugs treating diseases that present with that phenotype."
+        },
+        {
+          "label": "Path E — 2-hop via disease subclass",
+          "hop_count": 2,
+          "template": "Drug -[biolink:treats]-> Disease_specific -[biolink:subclass_of]-> Disease_general",
+          "variant": "specific",
+          "rationale": "When the user names a broad disease category, surface drugs treating its specific subtypes."
+        },
+        {
+          "label": "Path F — 1-hop prevention",
+          "hop_count": 1,
+          "template": "Drug -[biolink:preventative_for_condition]-> DiseaseOrPhenotypicFeature",
+          "variant": "specific",
+          "rationale": "For prophylaxis questions ('what prevents X')."
+        }
+      ]
+    },
+    {
+      "tag": "OTHER",
+      "name": "Other / unclassified",
+      "definition": "The question does not fit any of the ten repurposing archetypes above. Use this label sparingly. If the question is off-topic (not about drug repurposing) or too vague to classify, prefer to refuse with reason `out_of_scope` or `needs_clarification`.",
+      "typical_shape": "Fallback label. Not a substitute for refusal.",
+      "linguistic_signals": [],
+      "example_questions": [],
+      "key_predicates": [],
+      "biolink_paths": []
+    }
+  ]
+}
