@@ -1,0 +1,173 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Using the available input tnbc_signature, a directional human gene signature for triple-negative breast cancer, which drugs are predicted to reverse it?",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": ["Q3_signature_reversal"],
+    "intent": "discovery",
+    "restated_question": "Find drugs whose per-gene expression effects are opposite to the disease signature of triple-negative breast cancer.",
+    "assumptions": [
+      "'Reverse the signature' is decomposed to per-gene opposite-direction expression effects.",
+      "The available directional signature is partitioned by its recorded source direction."
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "disease_x",
+      "name": "triple-negative breast cancer",
+      "biolink_category": "Disease",
+      "is_variable": false
+    },
+    {
+      "entity_ref": "sig_increased_gene",
+      "name": "genes increased in the supplied disease signature",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false,
+      "input_binding": {
+        "binding_type": "external_input",
+        "input_ref": "tnbc_signature",
+        "expected_format": "directional_gene_signature",
+        "direction_filter": "increased"
+      }
+    },
+    {
+      "entity_ref": "sig_decreased_gene",
+      "name": "genes decreased in the supplied disease signature",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false,
+      "input_binding": {
+        "binding_type": "external_input",
+        "input_ref": "tnbc_signature",
+        "expected_format": "directional_gene_signature",
+        "direction_filter": "decreased"
+      }
+    },
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any small molecule",
+      "biolink_category": "SmallMolecule",
+      "is_variable": true
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1_reverse_increased",
+      "archetype_tag": "Q3_signature_reversal",
+      "rationale": "For each gene in the increased partition of tnbc_signature, find drugs that decrease its expression.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:affects",
+          "object_ref": "sig_increased_gene",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "expression",
+            "object_direction_qualifier": "decreased"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "SmallMolecule"
+    },
+    {
+      "path_id": "P2_reverse_decreased",
+      "archetype_tag": "Q3_signature_reversal",
+      "rationale": "For each gene in the decreased partition of tnbc_signature, find drugs that increase its expression.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:affects",
+          "object_ref": "sig_decreased_gene",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "expression",
+            "object_direction_qualifier": "increased"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "SmallMolecule"
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "This discovery-only plan has no explanation stage, so candidate order is determined entirely from the two signature-proxy paths.",
+      "discovery": {
+        "strategy": "multi_path_consensus",
+        "criteria": [
+          {
+            "name": "num_supporting_paths",
+            "direction": "desc",
+            "weight": 3,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer compounds supported by both up- and down-signature proxy paths."
+          },
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+            "rationale": "Prefer directly asserted or observed supporting edges without excluding predictive evidence."
+          },
+          {
+            "name": "num_knowledge_sources",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer candidates supported by more independent knowledge sources."
+          }
+        ],
+        "top_k": 50
+      }
+    }
+  },
+  "evidence_recommendations": [
+    {
+      "feature": "primary_knowledge_source",
+      "origin": "planner_recommended",
+      "application": "report",
+      "rationale": "Report the upstream KG source for every proxy edge so the signature-reversal evidence can be audited."
+    },
+    {
+      "feature": "knowledge_level",
+      "origin": "planner_recommended",
+      "application": "report",
+      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "rationale": "Expose the knowledge-level metadata used by ranking while retaining all evidence types."
+    }
+  ],
+  "aggregation": {
+    "combine": "weighted_union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true
+  },
+  "confidence": {
+    "level": "low",
+    "reasons": [
+      "biolink_predicate_gap_material",
+      "workaround_is_proxy_not_exact",
+      "available_directional_signature_partitioned",
+      "requires_external_signature_scoring"
+    ]
+  },
+  "gaps": [
+    {
+      "kind": "biolink_predicate_missing",
+      "description": "Biolink has no predicate for a gene-expression signature object or for 'reverses signature' as a single relation.",
+      "affected_path_ids": ["P1_reverse_increased", "P2_reverse_decreased"],
+      "workaround": "Bind each direction_filter partition of tnbc_signature to a fixed Gene entity, then decompose reversal into per-gene opposite-direction `affects` edges with an expression aspect qualifier and aggregate the returned support outside ordinary KG traversal."
+    }
+  ],
+  "notes": "A chosen query workflow must expand both partitions and aggregate per-gene reversal into a connectivity-style score. The KG cannot express the whole signature or its reversal as a single Biolink edge."
+}

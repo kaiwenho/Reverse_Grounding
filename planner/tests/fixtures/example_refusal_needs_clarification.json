@@ -1,0 +1,29 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Are there any drugs I could try for it?",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": ["OTHER"],
+    "restated_question": "The user is asking for drug candidates for an unspecified condition.",
+    "intent": "discovery",
+    "assumptions": [
+      "The question uses an unresolved pronoun ('it') with no antecedent in the current turn.",
+      "No disease, phenotype, or gene has been mentioned."
+    ]
+  },
+  "entities": [],
+  "confidence": {
+    "level": "low",
+    "reasons": [
+      "no_grounding_entity_extractable",
+      "unresolved_pronoun",
+      "cannot_map_to_archetype"
+    ]
+  },
+  "refusal": {
+    "reason": "needs_clarification",
+    "message": "The question does not specify a disease, condition, or target. Please provide the specific condition (e.g., 'idiopathic pulmonary fibrosis', 'Alzheimer's disease') and, if relevant, any candidate mechanism or gene of interest. No follow-up interaction is available in this pipeline; please resubmit as a complete question."
+  },
+  "notes": "v0.10.0 pattern: underspecified questions are refused with reason `needs_clarification` and the message carries what the planner would have asked. The pipeline does not support human-in-the-loop follow-up."
+}

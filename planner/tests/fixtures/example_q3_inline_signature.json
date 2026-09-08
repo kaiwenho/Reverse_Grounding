@@ -1,0 +1,195 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "The human asthma signature contains the following up-regulated genes: IL4, IL5, and IL13. Which compounds may reverse it by decreasing their expression?",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": ["Q3_signature_reversal"],
+    "intent": "discovery",
+    "restated_question": "Find compounds reported to decrease expression of the three human genes that the user supplied as up-regulated in the asthma signature.",
+    "assumptions": [
+      "Signature reversal is approximated as opposite-direction expression effects on each explicitly supplied gene."
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "disease_asthma",
+      "name": "asthma",
+      "biolink_category": "Disease",
+      "is_variable": false
+    },
+    {
+      "entity_ref": "gene_il4",
+      "name": "IL4",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false,
+      "notes": "The user supplied IL4 as up-regulated in the source signature."
+    },
+    {
+      "entity_ref": "gene_il5",
+      "name": "IL5",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false,
+      "notes": "The user supplied IL5 as up-regulated in the source signature."
+    },
+    {
+      "entity_ref": "gene_il13",
+      "name": "IL13",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false,
+      "notes": "The user supplied IL13 as up-regulated in the source signature."
+    },
+    {
+      "entity_ref": "candidate_compound",
+      "name": "any compound",
+      "biolink_category": "SmallMolecule",
+      "is_variable": true
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1_reverse_IL4",
+      "archetype_tag": "Q3_signature_reversal",
+      "rationale": "Find compounds reported to decrease expression of user-supplied up-regulated IL4.",
+      "hops": [
+        {
+          "subject_ref": "candidate_compound",
+          "predicate": "biolink:affects",
+          "object_ref": "gene_il4",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "expression",
+            "object_direction_qualifier": "decreased"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_compound",
+      "expected_result_category": "SmallMolecule"
+    },
+    {
+      "path_id": "P2_reverse_IL5",
+      "archetype_tag": "Q3_signature_reversal",
+      "rationale": "Find compounds reported to decrease expression of user-supplied up-regulated IL5.",
+      "hops": [
+        {
+          "subject_ref": "candidate_compound",
+          "predicate": "biolink:affects",
+          "object_ref": "gene_il5",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "expression",
+            "object_direction_qualifier": "decreased"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_compound",
+      "expected_result_category": "SmallMolecule"
+    },
+    {
+      "path_id": "P3_reverse_IL13",
+      "archetype_tag": "Q3_signature_reversal",
+      "rationale": "Find compounds reported to decrease expression of user-supplied up-regulated IL13.",
+      "hops": [
+        {
+          "subject_ref": "candidate_compound",
+          "predicate": "biolink:affects",
+          "object_ref": "gene_il13",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "expression",
+            "object_direction_qualifier": "decreased"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_compound",
+      "expected_result_category": "SmallMolecule"
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "This discovery-only plan ranks compounds by support across the three independently supplied signature members.",
+      "discovery": {
+        "strategy": "multi_path_consensus",
+        "criteria": [
+          {
+            "name": "num_supporting_paths",
+            "direction": "desc",
+            "weight": 3,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer compounds supported by opposite-direction expression evidence for more of the supplied genes."
+          },
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+            "rationale": "Prefer directly asserted or observed support while retaining other and unannotated evidence."
+          },
+          {
+            "name": "num_knowledge_sources",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer compounds supported by more independent knowledge sources."
+          }
+        ],
+        "top_k": 50
+      }
+    }
+  },
+  "evidence_recommendations": [
+    {
+      "feature": "primary_knowledge_source",
+      "origin": "planner_recommended",
+      "application": "report",
+      "rationale": "Report the upstream KG source for every proxy expression edge."
+    },
+    {
+      "feature": "knowledge_level",
+      "origin": "planner_recommended",
+      "application": "report",
+      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "rationale": "Expose the knowledge-level metadata used by ranking while retaining all evidence types."
+    }
+  ],
+  "aggregation": {
+    "combine": "weighted_union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true
+  },
+  "confidence": {
+    "level": "low",
+    "reasons": [
+      "inline_signature_members_and_direction_explicit",
+      "biolink_predicate_gap_material",
+      "workaround_is_proxy_not_exact",
+      "requires_external_signature_scoring"
+    ]
+  },
+  "gaps": [
+    {
+      "kind": "biolink_predicate_missing",
+      "description": "Biolink has no predicate for a gene-expression signature object or for signature reversal as a single relation.",
+      "affected_path_ids": ["P1_reverse_IL4", "P2_reverse_IL5", "P3_reverse_IL13"],
+      "workaround": "Use one fixed surface-name Gene entity and one opposite-direction affects-expression path per user-supplied member, then aggregate support across the three paths."
+    },
+    {
+      "kind": "requires_external_computation",
+      "description": "A quantitative signature-reversal or connectivity score is an external calculation rather than an ordinary Biolink graph edge.",
+      "affected_path_ids": ["P1_reverse_IL4", "P2_reverse_IL5", "P3_reverse_IL13"],
+      "workaround": "Use the KG paths as per-gene evidence and compute any desired connectivity-style score after retrieval."
+    }
+  ],
+  "notes": "The user supplied all three gene names and their source direction inline, so no external input binding or dataset manifest is required. The resolver must ground IL4, IL5, and IL13 in human taxon context."
+}

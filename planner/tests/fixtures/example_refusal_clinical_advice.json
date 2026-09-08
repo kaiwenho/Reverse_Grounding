@@ -1,0 +1,22 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "What prescription medicine should I personally start taking for chest pain?",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": ["OTHER"],
+    "restated_question": "The user requests individualized prescription-medication advice for chest pain.",
+    "intent": "discovery"
+  },
+  "entities": [],
+  "confidence": {
+    "level": "low",
+    "reasons": [
+      "individualized_clinical_advice_requested"
+    ]
+  },
+  "refusal": {
+    "reason": "unsafe_or_clinical_advice",
+    "message": "I cannot recommend a prescription medicine for an individual. Seek assessment from a qualified clinician; urgent or severe chest pain needs prompt medical attention."
+  }
+}

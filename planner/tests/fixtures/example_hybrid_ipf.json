@@ -1,0 +1,236 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Find approved drugs that could be repurposed for idiopathic pulmonary fibrosis, and for each candidate show the mechanistic rationale.",
+  "plan_mode": "hybrid",
+  "interpretation": {
+    "archetypes": ["Q1_target_based", "Q6_pathway_moa"],
+    "restated_question": "Discover approved drugs whose targets are implicated in IPF, then for each candidate use the two-endpoint path tool to attach a mechanistic explanation between the drug and IPF.",
+    "intent": "mixed",
+    "assumptions": [
+      "'Approved' means currently marketed for any indication and remains a hard eligibility filter; the query system may translate this semantic constraint to its available approval attributes.",
+      "Human context is the default anatomical/species scope."
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "disease_ipf",
+      "name": "idiopathic pulmonary fibrosis",
+      "aliases": ["IPF"],
+      "biolink_category": "Disease",
+      "is_variable": false
+    },
+    {
+      "entity_ref": "ipf_gene",
+      "name": "any gene associated with IPF",
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": true
+    },
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any approved small molecule",
+      "biolink_category": "SmallMolecule",
+      "is_variable": true,
+      "constraints": [
+        { "field": "approval_status", "op": "eq", "value": "approved" }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1_target_binds",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "Approved drug directly physically interacts with a gene associated with IPF.",
+      "hops": [
+        {
+          "subject_ref": "ipf_gene",
+          "predicate": "biolink:gene_associated_with_condition",
+          "object_ref": "disease_ipf"
+        },
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:directly_physically_interacts_with",
+          "object_ref": "ipf_gene"
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "SmallMolecule"
+    },
+    {
+      "path_id": "P2_target_inhibits",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "Approved drug inhibits activity of a gene associated with IPF.",
+      "hops": [
+        {
+          "subject_ref": "ipf_gene",
+          "predicate": "biolink:gene_associated_with_condition",
+          "object_ref": "disease_ipf"
+        },
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:affects",
+          "object_ref": "ipf_gene",
+          "qualifiers": {
+            "qualified_predicate": "biolink:causes",
+            "object_aspect_qualifier": "activity",
+            "object_direction_qualifier": "decreased",
+            "causal_mechanism_qualifier": "inhibition"
+          }
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "SmallMolecule"
+    }
+  ],
+  "explanation_queries": [
+    {
+      "query_id": "EQ1_explain_candidate",
+      "archetype_tag": "Q6_pathway_moa",
+      "rationale": "For each top discovery candidate, retrieve mechanistic paths between the candidate drug and IPF through gene, protein, pathway, or process intermediates.",
+      "endpoint_a": {
+        "binding_type": "from_discovery",
+        "from_path_ids": ["P1_target_binds", "P2_target_inhibits"],
+        "fanout_top_k": 20
+      },
+      "endpoint_b": {
+        "binding_type": "entity",
+        "entity_ref": "disease_ipf"
+      },
+      "max_hops": 3,
+      "middle_category_whitelist": [
+        "Gene", "Protein", "GeneOrGeneProduct",
+        "Pathway", "BiologicalProcess", "BiologicalProcessOrActivity"
+      ],
+      "post_filter": {
+        "predicate_whitelist": [
+          "biolink:affects",
+          "biolink:directly_physically_interacts_with",
+          "biolink:physically_interacts_with",
+          "biolink:regulates",
+          "biolink:participates_in",
+          "biolink:actively_involved_in",
+          "biolink:enables",
+          "biolink:gene_associated_with_condition",
+          "biolink:causes",
+          "biolink:contributes_to"
+        ],
+        "drop_paths_with_negated_edges": true,
+        "unique_intermediate_nodes": true
+      },
+      "return": {
+        "top_k_paths": 5,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "annotate_only",
+      "rationale": "The user asks to find candidates and then show the mechanism for each; this wording calls for ranking candidates from discovery evidence first and attaching explanations without changing that order.",
+      "discovery": {
+        "strategy": "multi_path_consensus",
+        "criteria": [
+          {
+            "name": "num_supporting_paths",
+            "direction": "desc",
+            "weight": 2,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer candidates supported by both materially distinct discovery mechanisms."
+          },
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+            "rationale": "Prefer directly asserted or observed discovery evidence while retaining predictions and unannotated edges."
+          },
+          {
+            "name": "num_knowledge_sources",
+            "direction": "desc",
+            "weight": 0.75,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer candidates supported by more independent knowledge sources."
+          }
+        ],
+        "top_k": 20,
+        "tie_breaker": "path_priority_order"
+      }
+    },
+    "explanation_ranking": {
+      "strategy": "explanation_diversity",
+      "criteria": [
+        {
+          "name": "distinct_intermediate_categories",
+          "direction": "desc",
+          "weight": 2,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Prefer candidate explanations spanning distinct biological mechanisms rather than near-duplicate paths."
+        },
+        {
+          "name": "knowledge_level",
+          "direction": "desc",
+          "weight": 1,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+          "rationale": "Prefer explanation paths with directly asserted or observed evidence while retaining other evidence types."
+        },
+        {
+          "name": "path_length",
+          "direction": "asc",
+          "weight": 0.5,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Within a diverse explanation set, prefer shorter paths with fewer inferential steps."
+        }
+      ],
+      "top_k": 5,
+      "tie_breaker": "recency"
+    }
+  },
+  "evidence_recommendations": [
+    {
+      "feature": "primary_knowledge_source",
+      "origin": "planner_recommended",
+      "application": "report",
+      "rationale": "Report the upstream KG source for every supporting edge; this is provenance metadata, not primary literature."
+    },
+    {
+      "feature": "knowledge_level",
+      "origin": "planner_recommended",
+      "application": "report",
+      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "rationale": "Expose the knowledge-level metadata used by ranking so a human can audit the result."
+    }
+  ],
+  "aggregation": {
+    "combine": "path_priority_union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true,
+    "attach_explanations_to_candidates": true
+  },
+  "confidence": {
+    "level": "medium",
+    "reasons": [
+      "multiple_archetypes",
+      "hybrid_workflow_two_stage",
+      "all_entities_unambiguous",
+      "no_biolink_gaps",
+      "predicate_constraints_pushed_to_post_filter_for_explanation"
+    ]
+  },
+  "notes": "Hybrid annotate-only workflow: P1/P2 are aggregated, deduplicated, and ranked using candidate_ranking.discovery; EQ1 then fans out to the top 20 candidates and attaches up to 5 mechanistic paths per candidate. Because the user asked to rank candidates first and then show mechanism, explanations do not reorder candidates."
+}

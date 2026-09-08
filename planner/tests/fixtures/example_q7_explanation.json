@@ -1,0 +1,172 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Why might metformin be beneficial in Alzheimer's disease? Show me the mechanistic paths.",
+  "plan_mode": "explanation",
+  "interpretation": {
+    "archetypes": ["Q7_real_world_evidence", "Q6_pathway_moa"],
+    "restated_question": "Given a known observational RWE association, retrieve knowledge-graph paths between metformin and Alzheimer's disease that explain the mechanism.",
+    "intent": "validation",
+    "assumptions": [
+      "The user already has a hypothesis of benefit; the goal is to surface mechanistic rationale, not to discover new candidates.",
+      "'Metformin' resolves to the single small molecule (not the class of biguanides)."
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "drug_metformin",
+      "name": "metformin",
+      "biolink_category": "SmallMolecule",
+      "is_variable": false
+    },
+    {
+      "entity_ref": "disease_ad",
+      "name": "Alzheimer's disease",
+      "aliases": ["Alzheimer disease", "AD"],
+      "biolink_category": "Disease",
+      "is_variable": false
+    }
+  ],
+  "explanation_queries": [
+    {
+      "query_id": "EQ1_gene_bridge",
+      "archetype_tag": "Q7_real_world_evidence",
+      "rationale": "Paths through a gene/protein intermediate capture direct-target mechanistic rationale (e.g., metformin -> AMPK -> insulin/PI3K signalling -> AD).",
+      "endpoint_a": { "binding_type": "entity", "entity_ref": "drug_metformin" },
+      "endpoint_b": { "binding_type": "entity", "entity_ref": "disease_ad" },
+      "max_hops": 3,
+      "middle_category_whitelist": ["Gene", "Protein", "GeneOrGeneProduct"],
+      "post_filter": {
+        "predicate_whitelist": [
+          "biolink:affects",
+          "biolink:directly_physically_interacts_with",
+          "biolink:physically_interacts_with",
+          "biolink:regulates",
+          "biolink:gene_associated_with_condition",
+          "biolink:causes",
+          "biolink:contributes_to",
+          "biolink:biomarker_for"
+        ],
+        "drop_paths_with_negated_edges": true,
+        "unique_intermediate_nodes": true
+      },
+      "return": {
+        "top_k_paths": 15,
+        "rank_by": "composite",
+        "group_by_intermediate_category": false
+      }
+    },
+    {
+      "query_id": "EQ2_pathway_bridge",
+      "archetype_tag": "Q6_pathway_moa",
+      "rationale": "Paths through a biological process or pathway intermediate capture systems-level mechanistic rationale.",
+      "endpoint_a": { "binding_type": "entity", "entity_ref": "drug_metformin" },
+      "endpoint_b": { "binding_type": "entity", "entity_ref": "disease_ad" },
+      "max_hops": 4,
+      "middle_category_whitelist": ["Pathway", "BiologicalProcess", "BiologicalProcessOrActivity", "MolecularActivity"],
+      "post_filter": {
+        "predicate_whitelist": [
+          "biolink:affects",
+          "biolink:participates_in",
+          "biolink:actively_involved_in",
+          "biolink:enables",
+          "biolink:regulates",
+          "biolink:gene_associated_with_condition",
+          "biolink:has_participant"
+        ],
+        "drop_paths_with_negated_edges": true,
+        "unique_intermediate_nodes": true
+      },
+      "return": {
+        "top_k_paths": 10,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    }
+  ],
+  "ranking": {
+    "explanation_ranking": {
+      "strategy": "explanation_diversity",
+      "criteria": [
+      {
+        "name": "distinct_intermediate_categories",
+        "direction": "desc",
+        "weight": 2,
+        "origin": "planner_recommended",
+        "application": "rank",
+        "scope": "portable",
+        "rationale": "Prefer explanations that cover distinct mechanisms instead of near-duplicate paths."
+      },
+      {
+        "name": "knowledge_level",
+        "direction": "desc",
+        "weight": 1.5,
+        "origin": "planner_recommended",
+        "application": "rank",
+        "scope": "portable",
+        "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+        "rationale": "Prefer paths whose edges are directly asserted or observed while retaining other evidence types."
+      },
+      {
+        "name": "num_knowledge_sources",
+        "direction": "desc",
+        "weight": 1,
+        "origin": "planner_recommended",
+        "application": "rank",
+        "scope": "portable",
+        "rationale": "Prefer explanation paths supported by more independent knowledge sources."
+      },
+      {
+        "name": "path_length",
+        "direction": "asc",
+        "weight": 1,
+        "origin": "planner_recommended",
+        "application": "rank",
+        "scope": "portable",
+        "rationale": "Within a diverse explanation set, prefer shorter paths with fewer inferential steps."
+      }
+      ],
+      "top_k": 20,
+      "tie_breaker": "recency"
+    }
+  },
+  "evidence_recommendations": [
+    {
+      "feature": "primary_knowledge_source",
+      "origin": "planner_recommended",
+      "application": "report",
+      "rationale": "Report the upstream KG source for every explanation edge; this is provenance metadata, not primary literature."
+    },
+    {
+      "feature": "knowledge_level",
+      "origin": "planner_recommended",
+      "application": "report",
+      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "rationale": "Expose the knowledge-level metadata used by path ranking so a human can audit the explanation."
+    }
+  ],
+  "aggregation": {
+    "combine": "union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true,
+    "attach_explanations_to_candidates": false
+  },
+  "confidence": {
+    "level": "medium",
+    "reasons": [
+      "multiple_archetypes",
+      "one_gap_workaround",
+      "predicate_constraints_pushed_to_post_filter",
+      "all_entities_unambiguous"
+    ]
+  },
+  "gaps": [
+    {
+      "kind": "tool_cannot_constrain_predicates",
+      "description": "The path-between tool accepts only middle-category constraints, so predicate-level constraints are enforced in post_filter after the tool returns.",
+      "affected_query_ids": ["EQ1_gene_bridge", "EQ2_pathway_bridge"],
+      "workaround": "Applied predicate_whitelist and qualifier requirements as post-filters on returned paths."
+    }
+  ],
+  "notes": "Two explanation queries with different intermediate-category constraints produce complementary evidence sets (direct-target vs pathway-level). Downstream should present both to the user."
+}

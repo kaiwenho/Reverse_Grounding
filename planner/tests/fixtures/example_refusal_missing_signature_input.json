@@ -1,0 +1,27 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Using the supplied dataset asthma_signature, which contains a directional human gene signature, find compounds predicted to reverse it.",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": ["Q3_signature_reversal"],
+    "intent": "discovery",
+    "restated_question": "Find compounds whose expression effects reverse the directional human asthma gene signature.",
+    "assumptions": [
+      "The question names asthma_signature, but no matching external input is present in the authoritative available-input manifest."
+    ]
+  },
+  "entities": [],
+  "confidence": {
+    "level": "low",
+    "reasons": [
+      "required_external_input_missing",
+      "signature_members_and_directions_unavailable"
+    ]
+  },
+  "refusal": {
+    "reason": "needs_clarification",
+    "message": "The named asthma_signature dataset was not supplied to the planner. Please provide it as an available directional_gene_signature input, including a gene identifier and increased/upregulated or decreased/downregulated direction for each member, or include the directional gene values directly in the question."
+  },
+  "notes": "Mentioning a supplied dataset in question text does not create an external input binding."
+}

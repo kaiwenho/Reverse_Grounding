@@ -1,0 +1,186 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "What approved drugs target VEGFR2 and could be repurposed for diabetic retinopathy?",
+  "plan_mode": "hybrid",
+  "interpretation": {
+    "archetypes": ["Q1_target_based"],
+    "restated_question": "Find approved drugs that affect the known target VEGFR2, then independently examine how VEGFR2 connects to diabetic retinopathy without making that uncertain target-disease relationship a mandatory candidate-discovery edge.",
+    "intent": "mixed",
+    "assumptions": [
+      "'VEGFR2' refers to the human gene/protein (KDR).",
+      "'Approved' means currently marketed for any indication and remains a hard eligibility filter; the query system may translate this semantic constraint to its available approval attributes.",
+      "The word 'target' supports broad target modulation but does not by itself establish direct physical binding, inhibition, or activation."
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "disease_x",
+      "name": "diabetic retinopathy",
+      "biolink_category": "Disease",
+      "is_variable": false
+    },
+    {
+      "entity_ref": "target_gene",
+      "name": "VEGFR2",
+      "aliases": ["KDR", "vascular endothelial growth factor receptor 2"],
+      "biolink_category": "Gene",
+      "taxa": ["NCBITaxon:9606"],
+      "is_variable": false
+    },
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any small molecule or drug",
+      "biolink_category": "SmallMolecule",
+      "is_variable": true,
+      "constraints": [
+        { "field": "approval_status", "op": "eq", "value": "approved" }
+      ]
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1_affects_known_target",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "The user asks for drugs that target VEGFR2 without specifying binding or effect direction, so use the broad Biolink affects family and do not add an unsupported target-disease predicate to candidate eligibility.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:affects",
+          "object_ref": "target_gene",
+          "predicate_expansion": "descendants"
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "SmallMolecule"
+    }
+  ],
+  "explanation_queries": [
+    {
+      "query_id": "EQ1_vegfr2_disease_context",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "Independently retrieve KG-supported paths between the known target and disease. This checks disease relevance without allowing an absent fixed target-disease edge to eliminate all drug candidates.",
+      "endpoint_a": {
+        "binding_type": "entity",
+        "entity_ref": "target_gene"
+      },
+      "endpoint_b": {
+        "binding_type": "entity",
+        "entity_ref": "disease_x"
+      },
+      "max_hops": 3,
+      "middle_category_whitelist": [
+        "Gene", "Protein", "GeneOrGeneProduct", "Disease",
+        "DiseaseOrPhenotypicFeature", "PhenotypicFeature", "Pathway",
+        "BiologicalProcess", "BiologicalProcessOrActivity"
+      ],
+      "post_filter": {
+        "drop_paths_with_negated_edges": true,
+        "unique_intermediate_nodes": true
+      },
+      "return": {
+        "top_k_paths": 5,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "The VEGFR2-to-disease explanation is shared context for every candidate, so it cannot distinguish or reorder the drugs returned by the drug-to-VEGFR2 query.",
+      "discovery": {
+        "strategy": "evidence_weighted",
+        "criteria": [
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "weight": 1.5,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+            "rationale": "Prefer directly asserted or observed support while retaining predictions and edges with missing knowledge-level metadata."
+          },
+          {
+            "name": "num_knowledge_sources",
+            "direction": "desc",
+            "weight": 1,
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "rationale": "Prefer candidates supported by more independent knowledge sources."
+          }
+        ],
+        "top_k": 25,
+        "tie_breaker": "alphabetical"
+      }
+    },
+    "explanation_ranking": {
+      "strategy": "explanation_diversity",
+      "criteria": [
+        {
+          "name": "distinct_intermediate_categories",
+          "direction": "desc",
+          "weight": 2,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Prefer target-disease explanations that cover different biological mechanisms rather than near-duplicate paths."
+        },
+        {
+          "name": "knowledge_level",
+          "direction": "desc",
+          "weight": 1,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+          "rationale": "Prefer explanation paths supported by more directly asserted or observed evidence while retaining other evidence types."
+        },
+        {
+          "name": "path_length",
+          "direction": "asc",
+          "weight": 0.5,
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Within a diverse explanation set, prefer shorter paths with fewer inferential steps."
+        }
+      ],
+      "top_k": 5,
+      "tie_breaker": "recency"
+    }
+  },
+  "evidence_recommendations": [
+    {
+      "feature": "primary_knowledge_source",
+      "origin": "planner_recommended",
+      "application": "report",
+      "rationale": "Report the upstream KG source responsible for each edge so provenance can be assessed; this does not mean primary literature."
+    },
+    {
+      "feature": "knowledge_level",
+      "origin": "planner_recommended",
+      "application": "report",
+      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "rationale": "Report the Biolink knowledge level used by ranking so the evidence preference remains auditable."
+    }
+  ],
+  "aggregation": {
+    "combine": "path_priority_union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true,
+    "attach_explanations_to_candidates": false
+  },
+  "confidence": {
+    "level": "medium",
+    "reasons": [
+      "single_archetype",
+      "all_entities_unambiguous",
+      "all_predicates_recognized",
+      "known_target_disease_relevance_checked_independently"
+    ]
+  },
+  "notes": "Run P1 to discover approved target-engaging candidates and EQ1 independently to assess target-disease context. If EQ1 finds no path, still return P1 candidates but label disease relevance as unverified; do not claim that the KG established repurposing support."
+}

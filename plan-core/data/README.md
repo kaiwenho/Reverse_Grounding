@@ -13,3 +13,4 @@ From the project root, run:
 curl -fsSL \
   https://raw.githubusercontent.com/biolink/biolink-model/v4.4.3/biolink-model.yaml \
   -o plan-core/data/biolink-model.yaml
+```
