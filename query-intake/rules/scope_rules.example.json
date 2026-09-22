@@ -1,0 +1,40 @@
+{
+  "$comment": [
+    "EXAMPLE ONLY. Copy to scope_rules.json to activate.",
+    "",
+    "With no scope_rules.json present the gate allows everything, which is the",
+    "correct default: entries should be added because something requires them,",
+    "not because a file wanted filling. A scope list in a biomedical tool",
+    "decides which researchers the tool is useless for.",
+    "",
+    "Every rule blocks one ontology term AND everything beneath it. Run",
+    "expand_closure() against a pinned ontology release to generate",
+    "scope_closure.json; without it a rule blocks only the exact term, which",
+    "looks like a working rule and is not. ScopeRules.unexpanded() lists any",
+    "root in that state.",
+    "",
+    "Required on every entry: rule_id, curie, label, owner, added,",
+    "justification. review_by is optional but strongly recommended --",
+    "stale_rules() reports entries past it, so the list gets re-read rather",
+    "than accumulating.",
+    "",
+    "The justification should name the institutional requirement the entry",
+    "satisfies. 'Discomfort with the topic' is not one; a policy, a legal",
+    "constraint or a data-use agreement is.",
+    "",
+    "The entry below is a placeholder using a nonexistent identifier so that",
+    "this file cannot be activated by accident."
+  ],
+  "schema": "query-intake-scope/0.1.0",
+  "rules": [
+    {
+      "rule_id": "R-000-EXAMPLE",
+      "curie": "MONDO:0000000",
+      "label": "placeholder term, not a real concept",
+      "owner": "name of the person answerable for this entry",
+      "added": "2026-01-01",
+      "review_by": "2027-01-01",
+      "justification": "Example entry. Replace with a rule that names the specific requirement it satisfies."
+    }
+  ]
+}

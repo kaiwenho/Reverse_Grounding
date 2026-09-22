@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "query-intake"
+version = "0.1.0"
+description = "The front door: request policy, scope, and one public entry point"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    # The loop this service fronts. Install editable from a sibling checkout
+    # while both are moving:
+    #     pip install -e ../loop-controller
+    "loop-controller>=0.1,<0.2",
+]
+
+# The one command that enters the system where questions are meant to enter
+# it. `loop-controller` starts a layer below this and skips rate limiting,
+# screening and scope, which is fine for development and wrong for a run that
+# claims to represent the system.
+[project.scripts]
+reverse-grounding = "query_intake.cli:main"
+
+# Prompt Guard is optional on purpose. A request layer that stops working when
+# an 86M classifier is unreachable has traded a small risk for a large one, so
+# the deterministic checks are the floor and the model is an addition to them.
+[project.optional-dependencies]
+promptguard = ["transformers>=4.40", "torch>=2.0"]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# `rules/` and the ontology file sit beside `src/`, resolved relative to the
+# package at runtime — the same arrangement plan-core uses for its schema and
+# Biolink model.
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
