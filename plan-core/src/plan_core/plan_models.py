@@ -167,6 +167,9 @@ class Entity(BaseModel):
     aliases: Optional[List[str]] = None
     biolink_category: str  # runtime-checked against Biolink vocab
     is_variable: bool
+    #: 'queried' (the default) or 'context'. See the schema description and
+    #: `_check_entities_are_used` in validators.py.
+    query_role: Literal["queried", "context"] = "queried"
     taxa: Optional[List[TaxonCurie]] = Field(default=None, min_length=1)
     input_binding: Optional[EntityInputBinding] = None
     constraints: Optional[List[EntityConstraint]] = None

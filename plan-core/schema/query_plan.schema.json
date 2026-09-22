@@ -44,13 +44,20 @@
     "plan_mode": {
       "description": "Overall plan mode. `discovery` = variable-endpoint template paths (find candidates). `explanation` = two specific endpoints, use the path-between tool to explain their connection. `hybrid` = combine predicate-based discovery with explanation queries that either explain discovered candidates or provide independent fixed-endpoint context/fallback.",
       "type": "string",
-      "enum": ["discovery", "explanation", "hybrid"]
+      "enum": [
+        "discovery",
+        "explanation",
+        "hybrid"
+      ]
     },
     "interpretation": {
       "description": "The planner's parsed reading of the question.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["archetypes", "restated_question"],
+      "required": [
+        "archetypes",
+        "restated_question"
+      ],
       "properties": {
         "archetypes": {
           "description": "Which drug-repurposing question archetype(s) this maps to. Multi-label allowed for hybrid questions.",
@@ -83,12 +90,18 @@
         "intent": {
           "description": "Linguistic signal for mode selection. `discovery` triggers on 'which/what/any/find'. `validation` triggers on 'why/how/does/is/explain'.",
           "type": "string",
-          "enum": ["discovery", "validation", "mixed"]
+          "enum": [
+            "discovery",
+            "validation",
+            "mixed"
+          ]
         },
         "assumptions": {
           "description": "Assumptions the planner made when the question was underspecified.",
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -96,19 +109,25 @@
       "description": "Named entities extracted from the question. Names are surface strings; the chosen query system resolves them to CURIEs. Every entity_ref used in paths or explanation queries MUST appear here.",
       "type": "array",
       "minItems": 0,
-      "items": { "$ref": "#/$defs/Entity" }
+      "items": {
+        "$ref": "#/$defs/Entity"
+      }
     },
     "paths": {
       "description": "Discovery-mode paths. Required when plan_mode is `discovery` or `hybrid`. Ordered list; order = ranking priority. Omit or leave empty in pure `explanation` mode.",
       "type": "array",
       "minItems": 0,
-      "items": { "$ref": "#/$defs/Path" }
+      "items": {
+        "$ref": "#/$defs/Path"
+      }
     },
     "explanation_queries": {
       "description": "Explanation-mode queries. Required when plan_mode is `explanation` or `hybrid`. Each item is a call to the two-endpoint path-between tool. In hybrid mode an item may explain discovered candidates or independently assess fixed-endpoint context without gating candidate discovery. Omit or leave empty in pure `discovery` mode.",
       "type": "array",
       "minItems": 0,
-      "items": { "$ref": "#/$defs/ExplanationQuery" }
+      "items": {
+        "$ref": "#/$defs/ExplanationQuery"
+      }
     },
     "ranking": {
       "description": "Explicit, stage-specific ranking instructions. `candidate_ranking` ranks discovered entities; `explanation_ranking` ranks paths returned across explanation queries. Query-local ExplanationReturn still controls paths within one explanation query.",
@@ -122,7 +141,9 @@
       "description": "Portable, non-filtering evidence metadata that the user or planner recommends reporting with results. These recommendations remain useful without the project Executor.",
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "#/$defs/EvidenceRecommendation" }
+      "items": {
+        "$ref": "#/$defs/EvidenceRecommendation"
+      }
     },
     "aggregation": {
       "description": "How results across paths / explanation queries should be combined into a final candidate list.",
@@ -132,18 +153,27 @@
       "description": "Planner's categorical self-assessment, anchored to structural properties of THIS plan (not a subjective introspective score). Level is derived by checking anchor conditions in `reasons`.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["level", "reasons"],
+      "required": [
+        "level",
+        "reasons"
+      ],
       "properties": {
         "level": {
           "description": "Anchored bins: `high` = all entities extracted with unambiguous names, question maps cleanly to a single archetype, all paths use predicates the planner recognizes, no gaps flagged. `medium` = at least one of: multiple archetypes, one gap flagged with a viable workaround, up to two stated assumptions, or moderate name ambiguity that is documented. `low` = multiple assumptions, ambiguous entity names, gaps that materially degrade the plan, or path templates the planner is uncertain about. If conditions for `low` are exceeded (e.g., cannot ground an entity name, cannot map to any archetype, cannot produce any valid path), the planner MUST NOT emit a plan and MUST return `refusal` with reason `needs_clarification` or `insufficient_information`.",
           "type": "string",
-          "enum": ["high", "medium", "low"]
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
         },
         "reasons": {
           "description": "Structural anchors that justify `level`. Every emitted plan must list at least one reason. Examples: 'single_archetype', 'no_gaps_flagged', 'all_entities_unambiguous', 'one_gap_workaround', 'multiple_assumptions', 'ambiguous_entity_name'. This is the field that eval and downstream gating should actually consume; `level` is a summary of it.",
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         }
       }
@@ -151,7 +181,9 @@
     "gaps": {
       "description": "Biolink or KG modeling gaps the planner detected. Populated when the question cannot be fully expressed with in-model predicates or with the available tools.",
       "type": "array",
-      "items": { "$ref": "#/$defs/Gap" }
+      "items": {
+        "$ref": "#/$defs/Gap"
+      }
     },
     "refusal": {
       "description": "If set, the planner declines to produce an executable plan. The semantic contract requires entities=[] and omission of paths, explanation_queries, ranking, aggregation, and evidence_policy. Use reason `needs_clarification` when the question is underspecified (no human-in-the-loop is available; the planner cannot ask follow-up questions).",
@@ -162,58 +194,109 @@
       "type": "string"
     }
   },
-
   "allOf": [
     {
       "description": "In discovery mode WITHOUT a refusal, at least one Path is required.",
       "if": {
-        "properties": { "plan_mode": { "const": "discovery" } },
-        "required": ["plan_mode"],
-        "not": { "required": ["refusal"] }
+        "properties": {
+          "plan_mode": {
+            "const": "discovery"
+          }
+        },
+        "required": [
+          "plan_mode"
+        ],
+        "not": {
+          "required": [
+            "refusal"
+          ]
+        }
       },
       "then": {
-        "required": ["paths"],
-        "properties": { "paths": { "minItems": 1 } }
+        "required": [
+          "paths"
+        ],
+        "properties": {
+          "paths": {
+            "minItems": 1
+          }
+        }
       }
     },
     {
       "description": "In explanation mode WITHOUT a refusal, at least one ExplanationQuery is required and paths must be empty or absent.",
       "if": {
-        "properties": { "plan_mode": { "const": "explanation" } },
-        "required": ["plan_mode"],
-        "not": { "required": ["refusal"] }
+        "properties": {
+          "plan_mode": {
+            "const": "explanation"
+          }
+        },
+        "required": [
+          "plan_mode"
+        ],
+        "not": {
+          "required": [
+            "refusal"
+          ]
+        }
       },
       "then": {
-        "required": ["explanation_queries"],
+        "required": [
+          "explanation_queries"
+        ],
         "properties": {
-          "explanation_queries": { "minItems": 1 },
-          "paths": { "maxItems": 0 }
+          "explanation_queries": {
+            "minItems": 1
+          },
+          "paths": {
+            "maxItems": 0
+          }
         }
       }
     },
     {
       "description": "In hybrid mode WITHOUT a refusal, both paths and explanation_queries must be non-empty.",
       "if": {
-        "properties": { "plan_mode": { "const": "hybrid" } },
-        "required": ["plan_mode"],
-        "not": { "required": ["refusal"] }
+        "properties": {
+          "plan_mode": {
+            "const": "hybrid"
+          }
+        },
+        "required": [
+          "plan_mode"
+        ],
+        "not": {
+          "required": [
+            "refusal"
+          ]
+        }
       },
       "then": {
-        "required": ["paths", "explanation_queries"],
+        "required": [
+          "paths",
+          "explanation_queries"
+        ],
         "properties": {
-          "paths": { "minItems": 1 },
-          "explanation_queries": { "minItems": 1 }
+          "paths": {
+            "minItems": 1
+          },
+          "explanation_queries": {
+            "minItems": 1
+          }
         }
       }
     }
   ],
-
   "$defs": {
-
     "Entity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entity_ref", "name", "biolink_category", "is_variable"],
+      "required": [
+        "entity_ref",
+        "name",
+        "biolink_category",
+        "is_variable"
+      ],
       "properties": {
         "entity_ref": {
           "description": "Local reference used inside paths and explanation queries (e.g. 'e1', 'disease_x'). Must be unique within this plan.",
@@ -228,7 +311,9 @@
         "aliases": {
           "description": "Optional alternative surface names a resolver may try if the primary name fails to resolve.",
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         },
         "biolink_category": {
@@ -288,21 +373,38 @@
         "constraints": {
           "description": "Optional constraints the chosen query system should apply to this entity after resolution.",
           "type": "array",
-          "items": { "$ref": "#/$defs/EntityConstraint" }
+          "items": {
+            "$ref": "#/$defs/EntityConstraint"
+          }
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        },
+        "query_role": {
+          "type": "string",
+          "enum": [
+            "queried",
+            "context"
+          ],
+          "default": "queried",
+          "description": "Whether this entity is part of the query or only names context. 'queried' (the default) means some hop, explanation query or binding must reference it; a fixed entity nothing references is a plan that silently dropped part of the question. 'context' is a deliberate declaration that the entity is named for provenance or interpretation and is not queried \u2014 as in Q3_signature_reversal, where the disease names the source of the expression signature while the query runs over genes. Marking an entity 'context' requires `notes` saying why, because the whole point is that the omission was a choice rather than an oversight."
+        }
       }
     },
-
     "EntityInputBinding": {
       "description": "A pre-resolved identifier set or a reference to a typed external input supplied at execution time.",
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["binding_type", "identifiers"],
+          "required": [
+            "binding_type",
+            "identifiers"
+          ],
           "properties": {
-            "binding_type": { "const": "identifiers" },
+            "binding_type": {
+              "const": "identifiers"
+            },
             "identifiers": {
               "description": "One or more CURIEs explicitly supplied by the user or upstream workflow.",
               "type": "array",
@@ -318,9 +420,15 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["binding_type", "input_ref", "expected_format"],
+          "required": [
+            "binding_type",
+            "input_ref",
+            "expected_format"
+          ],
           "properties": {
-            "binding_type": { "const": "external_input" },
+            "binding_type": {
+              "const": "external_input"
+            },
             "input_ref": {
               "description": "Stable name of an input supplied to the chosen query system by an upstream workflow.",
               "type": "string",
@@ -328,35 +436,62 @@
             },
             "expected_format": {
               "type": "string",
-              "enum": ["curie_list", "directional_gene_signature", "variant_list", "screening_panel"]
+              "enum": [
+                "curie_list",
+                "directional_gene_signature",
+                "variant_list",
+                "screening_panel"
+              ]
             },
             "direction_filter": {
               "description": "For a directional_gene_signature, select input rows by their source signature direction. This is the disease/state direction, not the desired drug effect. Signature-reversal paths use the opposite direction on the drug's expression edge.",
               "type": "string",
-              "enum": ["increased", "upregulated", "decreased", "downregulated"]
+              "enum": [
+                "increased",
+                "upregulated",
+                "decreased",
+                "downregulated"
+              ]
             }
           },
           "allOf": [
             {
               "if": {
                 "properties": {
-                  "expected_format": { "const": "directional_gene_signature" }
+                  "expected_format": {
+                    "const": "directional_gene_signature"
+                  }
                 },
-                "required": ["expected_format"]
+                "required": [
+                  "expected_format"
+                ]
               },
-              "then": { "required": ["direction_filter"] },
-              "else": { "not": { "required": ["direction_filter"] } }
+              "then": {
+                "required": [
+                  "direction_filter"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "direction_filter"
+                  ]
+                }
+              }
             }
           ]
         }
       ]
     },
-
     "EntityConstraint": {
       "description": "The planner's only supported hard entity constraint. `approval_status` is plan-level, portable semantic vocabulary rather than a Biolink slot or backend attribute: `approved` means currently marketed for any indication, while `ever_approved` also includes discontinued or withdrawn drugs. A query system may translate these values to its own attributes but must report the translation and must not silently relax the filter.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["field", "op", "value"],
+      "required": [
+        "field",
+        "op",
+        "value"
+      ],
       "properties": {
         "field": {
           "description": "Portable semantic field supported by this plan contract.",
@@ -371,16 +506,23 @@
         "value": {
           "description": "Use `approved` for currently marketed drugs; use `ever_approved` only when the user explicitly includes previously approved, discontinued, or withdrawn drugs.",
           "type": "string",
-          "enum": ["approved", "ever_approved"]
+          "enum": [
+            "approved",
+            "ever_approved"
+          ]
         }
       }
     },
-
     "Path": {
       "description": "A discovery-mode path template built from Biolink predicates. return_entity_ref is the contextual target and must be variable. Every enabled path must also contain at least one non-variable entity as a fixed query anchor.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["path_id", "rationale", "hops", "return_entity_ref"],
+      "required": [
+        "path_id",
+        "rationale",
+        "hops",
+        "return_entity_ref"
+      ],
       "properties": {
         "path_id": {
           "type": "string",
@@ -403,12 +545,17 @@
             "OTHER"
           ]
         },
-        "rationale": { "type": "string", "minLength": 1 },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
         "hops": {
           "type": "array",
           "minItems": 1,
           "maxItems": 5,
-          "items": { "$ref": "#/$defs/Hop" }
+          "items": {
+            "$ref": "#/$defs/Hop"
+          }
         },
         "return_entity_ref": {
           "description": "Contextual target returned by this path. In discovery and hybrid plans it must reference an entity with is_variable=true.",
@@ -419,16 +566,24 @@
           "description": "Optional category from the loaded Biolink Model expected for returned candidates. The category of return_entity_ref must be this category or one of its Biolink descendants.",
           "$ref": "#/$defs/Entity/properties/biolink_category"
         },
-        "disabled": { "type": "boolean", "default": false },
-        "notes": { "type": "string" }
+        "disabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "notes": {
+          "type": "string"
+        }
       }
     },
-
     "Hop": {
       "description": "One directed Biolink edge. subject_ref and object_ref must identify different entities; self-loop hops are unsupported. Semantic validation also restricts qualifier-bearing hops to the regulates, affects, and interacts_with predicate families and their active descendants in the loaded Biolink Model.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["subject_ref", "predicate", "object_ref"],
+      "required": [
+        "subject_ref",
+        "predicate",
+        "object_ref"
+      ],
       "properties": {
         "subject_ref": {
           "type": "string",
@@ -443,26 +598,43 @@
           "type": "string",
           "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
         },
-        "negated": { "type": "boolean", "default": false },
-        "qualifiers": { "$ref": "#/$defs/Qualifiers" },
+        "negated": {
+          "type": "boolean",
+          "default": false
+        },
+        "qualifiers": {
+          "$ref": "#/$defs/Qualifiers"
+        },
         "predicate_expansion": {
           "type": "string",
-          "enum": ["self_only", "descendants"],
+          "enum": [
+            "self_only",
+            "descendants"
+          ],
           "default": "descendants"
         },
         "edge_filters": {
           "type": "array",
-          "items": { "$ref": "#/$defs/EdgeFilter" }
+          "items": {
+            "$ref": "#/$defs/EdgeFilter"
+          }
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        }
       }
     },
-
     "ExplanationQuery": {
       "description": "A call to the two-endpoint path-between tool. The two endpoint bindings must identify different entities and must not share a discovery source; self-loop explanation queries are unsupported. The tool takes two resolved specific entities and returns all paths between them up to length k. It supports middle-node category constraints only. Predicate/qualifier/evidence constraints must be applied as post-filters on the returned paths. When this query is the required fallback for a predicate hop between two fixed entities, do not set predicate_whitelist or required_predicates_anywhere; the fallback must remain able to reveal alternative KG-supported connections.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["query_id", "rationale", "endpoint_a", "endpoint_b", "max_hops"],
+      "required": [
+        "query_id",
+        "rationale",
+        "endpoint_a",
+        "endpoint_b",
+        "max_hops"
+      ],
       "properties": {
         "query_id": {
           "type": "string",
@@ -490,8 +662,12 @@
           "type": "string",
           "minLength": 1
         },
-        "endpoint_a": { "$ref": "#/$defs/EndpointBinding" },
-        "endpoint_b": { "$ref": "#/$defs/EndpointBinding" },
+        "endpoint_a": {
+          "$ref": "#/$defs/EndpointBinding"
+        },
+        "endpoint_b": {
+          "$ref": "#/$defs/EndpointBinding"
+        },
         "max_hops": {
           "description": "Upper bound k on path length passed to the tool. Keep small (2-4) to control combinatorial blowup, especially when middle categories are not tightly constrained.",
           "type": "integer",
@@ -502,13 +678,17 @@
           "description": "Categories from the loaded Biolink Model allowed for intermediate nodes. Multiple categories = union. Omit to allow any category (not recommended at k>=3).",
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/Entity/properties/biolink_category" }
+          "items": {
+            "$ref": "#/$defs/Entity/properties/biolink_category"
+          }
         },
         "middle_category_blacklist": {
           "description": "Categories from the loaded Biolink Model forbidden for intermediate nodes (applied after whitelist).",
           "type": "array",
           "uniqueItems": true,
-          "items": { "$ref": "#/$defs/Entity/properties/biolink_category" }
+          "items": {
+            "$ref": "#/$defs/Entity/properties/biolink_category"
+          }
         },
         "post_filter": {
           "description": "Post-processing filters the chosen query system applies to returned paths. This is where predicate/qualifier/evidence constraints live when the path-finding tool does not enforce them at query time.",
@@ -518,19 +698,25 @@
           "description": "How many returned paths to keep, and how to rank them.",
           "$ref": "#/$defs/ExplanationReturn"
         },
-        "notes": { "type": "string" }
+        "notes": {
+          "type": "string"
+        }
       }
     },
-
     "EndpointBinding": {
       "description": "How one contextual explanation endpoint is bound. Its position as endpoint_a or endpoint_b defines its role for that query. Bind either directly to a non-variable Entity, or dynamically to aggregated discovery returns that are resolved before each hybrid explanation query executes.",
       "oneOf": [
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["binding_type", "entity_ref"],
+          "required": [
+            "binding_type",
+            "entity_ref"
+          ],
           "properties": {
-            "binding_type": { "const": "entity" },
+            "binding_type": {
+              "const": "entity"
+            },
             "entity_ref": {
               "description": "Reference to an Entity in `entities`. That entity MUST have is_variable=false, because the tool requires resolved specific endpoints.",
               "type": "string",
@@ -541,9 +727,15 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["binding_type", "from_path_ids", "fanout_top_k"],
+          "required": [
+            "binding_type",
+            "from_path_ids",
+            "fanout_top_k"
+          ],
           "properties": {
-            "binding_type": { "const": "from_discovery" },
+            "binding_type": {
+              "const": "from_discovery"
+            },
             "from_path_ids": {
               "description": "Non-empty list of enabled discovery `path_id` values. Each Path supplies its own `return_entity_ref`; those candidate sets are combined using the plan's `aggregation`, deduplicated, and ranked by candidate_ranking.discovery before fanout_top_k is applied. Only valid in hybrid plan_mode.",
               "type": "array",
@@ -563,7 +755,6 @@
         }
       ]
     },
-
     "ExplanationPostFilter": {
       "description": "Filters applied to returned paths from the two-endpoint tool. All filters are conjunctive unless stated.",
       "type": "object",
@@ -572,19 +763,28 @@
         "predicate_whitelist": {
           "description": "Only keep paths where every edge's predicate is one of these active, non-deprecated predicates (or a descendant via Biolink is_a).",
           "type": "array",
-          "items": { "type": "string", "pattern": "^biolink:[a-z][a-z0-9_]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^biolink:[a-z][a-z0-9_]*$"
+          },
           "uniqueItems": true
         },
         "predicate_blacklist": {
           "description": "Drop paths where any edge's predicate is one of these active, non-deprecated predicates (or a descendant).",
           "type": "array",
-          "items": { "type": "string", "pattern": "^biolink:[a-z][a-z0-9_]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^biolink:[a-z][a-z0-9_]*$"
+          },
           "uniqueItems": true
         },
         "required_predicates_anywhere": {
           "description": "Only keep paths where at least one edge uses each of these active, non-deprecated predicates.",
           "type": "array",
-          "items": { "type": "string", "pattern": "^biolink:[a-z][a-z0-9_]*$" },
+          "items": {
+            "type": "string",
+            "pattern": "^biolink:[a-z][a-z0-9_]*$"
+          },
           "uniqueItems": true
         },
         "required_qualifier_on_any_edge": {
@@ -601,12 +801,16 @@
         },
         "required_knowledge_sources_per_edge": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         },
         "excluded_knowledge_sources_per_edge": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "uniqueItems": true
         },
         "drop_paths_with_negated_edges": {
@@ -620,7 +824,6 @@
         }
       }
     },
-
     "ExplanationReturn": {
       "type": "object",
       "additionalProperties": false,
@@ -649,11 +852,10 @@
         }
       }
     },
-
     "Qualifiers": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Subset of Biolink qualifier slots most relevant to repurposing. On a Hop, this object is permitted only when the base predicate is biolink:regulates, biolink:affects, or biolink:interacts_with, or an active descendant of one of those families in the loaded model; semantic validation rejects every other predicate–qualifier combination.",
+      "description": "Subset of Biolink qualifier slots most relevant to repurposing. On a Hop, this object is permitted only when the base predicate is biolink:regulates, biolink:affects, or biolink:interacts_with, or an active descendant of one of those families in the loaded model; semantic validation rejects every other predicate\u2013qualifier combination.",
       "properties": {
         "qualified_predicate": {
           "description": "Active, non-deprecated Biolink predicate checked against the loaded model.",
@@ -663,68 +865,146 @@
         "object_aspect_qualifier": {
           "type": "string",
           "enum": [
-            "activity", "abundance", "expression", "localization", "stability",
-            "synthesis", "degradation", "secretion", "transport",
-            "molecular_interaction", "molecular_modification"
+            "activity",
+            "abundance",
+            "expression",
+            "localization",
+            "stability",
+            "synthesis",
+            "degradation",
+            "secretion",
+            "transport",
+            "molecular_interaction",
+            "molecular_modification"
           ]
         },
         "object_direction_qualifier": {
           "type": "string",
-          "enum": ["increased", "decreased", "upregulated", "downregulated"]
+          "enum": [
+            "increased",
+            "decreased",
+            "upregulated",
+            "downregulated"
+          ]
         },
         "subject_aspect_qualifier": {
           "type": "string",
           "enum": [
-            "activity", "abundance", "expression", "localization", "stability",
-            "synthesis", "degradation", "secretion", "transport",
-            "molecular_interaction", "molecular_modification"
+            "activity",
+            "abundance",
+            "expression",
+            "localization",
+            "stability",
+            "synthesis",
+            "degradation",
+            "secretion",
+            "transport",
+            "molecular_interaction",
+            "molecular_modification"
           ]
         },
         "subject_direction_qualifier": {
           "type": "string",
-          "enum": ["increased", "decreased", "upregulated", "downregulated"]
+          "enum": [
+            "increased",
+            "decreased",
+            "upregulated",
+            "downregulated"
+          ]
         },
         "causal_mechanism_qualifier": {
           "type": "string",
           "enum": [
-            "agonism", "antagonism", "inhibition", "activation",
-            "inverse_agonism", "allosteric_modulation",
-            "channel_opening", "channel_blockage", "modulation",
-            "molecular_channel_blockage", "molecular_channel_opening",
-            "transcriptional_regulation", "translational_regulation"
+            "agonism",
+            "antagonism",
+            "inhibition",
+            "activation",
+            "inverse_agonism",
+            "allosteric_modulation",
+            "channel_opening",
+            "channel_blockage",
+            "modulation",
+            "molecular_channel_blockage",
+            "molecular_channel_opening",
+            "transcriptional_regulation",
+            "translational_regulation"
           ]
         },
-        "anatomical_context_qualifier": { "type": "string" },
-        "species_context_qualifier": { "type": "string" }
+        "anatomical_context_qualifier": {
+          "type": "string"
+        },
+        "species_context_qualifier": {
+          "type": "string"
+        }
       }
     },
-
     "EdgeFilter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["field", "op", "value"],
+      "required": [
+        "field",
+        "op",
+        "value"
+      ],
       "properties": {
-        "field": { "type": "string" },
+        "field": {
+          "type": "string"
+        },
         "op": {
           "type": "string",
-          "enum": ["eq", "neq", "in", "not_in", "gte", "lte", "gt", "lt", "exists", "not_exists", "contains"]
+          "enum": [
+            "eq",
+            "neq",
+            "in",
+            "not_in",
+            "gte",
+            "lte",
+            "gt",
+            "lt",
+            "exists",
+            "not_exists",
+            "contains"
+          ]
         },
         "value": {
           "anyOf": [
-            { "type": "string" },
-            { "type": "number" },
-            { "type": "boolean" },
-            { "type": "array", "items": { "type": ["string", "number", "boolean"] } },
-            { "type": "null" }
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       }
     },
-
     "RankingCriterion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "direction", "origin", "application", "scope", "rationale"],
+      "required": [
+        "name",
+        "direction",
+        "origin",
+        "application",
+        "scope",
+        "rationale"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -744,12 +1024,24 @@
             "distinct_intermediate_categories"
           ]
         },
-        "direction": { "type": "string", "enum": ["asc", "desc"] },
-        "weight": { "type": "number", "minimum": 0 },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0
+        },
         "origin": {
           "description": "Whether this ranking preference was explicitly requested by the user or recommended by the planner.",
           "type": "string",
-          "enum": ["user_requested", "planner_recommended"]
+          "enum": [
+            "user_requested",
+            "planner_recommended"
+          ]
         },
         "application": {
           "description": "Ranking criteria are soft preferences and never hard filters.",
@@ -758,7 +1050,10 @@
         "scope": {
           "description": "portable criteria use returned Biolink/result fields and can be applied outside the project Executor; executor_specific criteria require the named implementation profile.",
           "type": "string",
-          "enum": ["portable", "executor_specific"]
+          "enum": [
+            "portable",
+            "executor_specific"
+          ]
         },
         "profile_id": {
           "description": "Required for an executor_specific derived criterion; for example, executor_epc_v1 for edge_evidence_strength.",
@@ -770,7 +1065,9 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "rationale": {
           "description": "Plain-language explanation usable by a non-Biolink expert.",
@@ -779,12 +1076,15 @@
         }
       }
     },
-
     "RankingSpec": {
       "description": "One explicit ranking stage. Its enclosing field identifies what is ranked: candidate_ranking.discovery, candidate_ranking.final, or explanation_ranking.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["strategy", "criteria", "top_k"],
+      "required": [
+        "strategy",
+        "criteria",
+        "top_k"
+      ],
       "properties": {
         "strategy": {
           "type": "string",
@@ -802,7 +1102,9 @@
           "description": "Ordered ranking features for this stage.",
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/RankingCriterion" }
+          "items": {
+            "$ref": "#/$defs/RankingCriterion"
+          }
         },
         "top_k": {
           "description": "Result limit for this ranking stage. In candidate_ranking.discovery it is the final candidate limit unless explanation_influence is rerank; in candidate_ranking.final it is the final candidate limit; in explanation_ranking it limits paths after combining explanation-query outputs.",
@@ -811,47 +1113,70 @@
         },
         "tie_breaker": {
           "type": "string",
-          "enum": ["path_priority_order", "alphabetical", "recency", "random"]
+          "enum": [
+            "path_priority_order",
+            "alphabetical",
+            "recency",
+            "random"
+          ]
         }
       }
     },
-
     "CandidateRanking": {
       "description": "How discovered candidate entities are ordered. `discovery` is always applied before any candidate-specific explanation fan-out. `final` exists only when explanations are explicitly allowed to rerank candidates.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["explanation_influence", "rationale", "discovery"],
+      "required": [
+        "explanation_influence",
+        "rationale",
+        "discovery"
+      ],
       "properties": {
         "explanation_influence": {
           "description": "`none`: explanations are independent context and do not annotate or reorder candidates. `annotate_only`: attach candidate-specific explanations after discovery ranking without changing candidate order. `rerank`: use a preliminary discovery ranking, run candidate-specific explanations, then apply `final` ranking.",
           "type": "string",
-          "enum": ["none", "annotate_only", "rerank"]
+          "enum": [
+            "none",
+            "annotate_only",
+            "rerank"
+          ]
         },
         "rationale": {
           "description": "Plain-language explanation of why the user's wording calls for this relationship between discovery and explanation ranking.",
           "type": "string",
           "minLength": 1
         },
-        "discovery": { "$ref": "#/$defs/RankingSpec" },
-        "final": { "$ref": "#/$defs/RankingSpec" }
+        "discovery": {
+          "$ref": "#/$defs/RankingSpec"
+        },
+        "final": {
+          "$ref": "#/$defs/RankingSpec"
+        }
       }
     },
-
     "RankingPlan": {
       "description": "Stage-specific ranking contract. Discovery plans use candidate_ranking; explanation plans use explanation_ranking; hybrid plans use both.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "candidate_ranking": { "$ref": "#/$defs/CandidateRanking" },
-        "explanation_ranking": { "$ref": "#/$defs/RankingSpec" }
+        "candidate_ranking": {
+          "$ref": "#/$defs/CandidateRanking"
+        },
+        "explanation_ranking": {
+          "$ref": "#/$defs/RankingSpec"
+        }
       }
     },
-
     "EvidenceRecommendation": {
       "description": "A non-filtering recommendation to report evidence metadata alongside results so a human can assess provenance or evidence type.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["feature", "origin", "application", "rationale"],
+      "required": [
+        "feature",
+        "origin",
+        "application",
+        "rationale"
+      ],
       "properties": {
         "feature": {
           "type": "string",
@@ -866,15 +1191,22 @@
         },
         "origin": {
           "type": "string",
-          "enum": ["user_requested", "planner_recommended"]
+          "enum": [
+            "user_requested",
+            "planner_recommended"
+          ]
         },
-        "application": { "const": "report" },
+        "application": {
+          "const": "report"
+        },
         "preferred_values": {
           "description": "Optional ordered values, most preferred first, when the recommendation is categorical.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "rationale": {
           "type": "string",
@@ -882,59 +1214,99 @@
         }
       }
     },
-
     "EvidencePolicy": {
       "description": "Hard evidence filters. This object is valid only for filters explicitly requested by the user; planner defaults and recommendations must not be encoded here.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["origin", "application", "rationale"],
+      "required": [
+        "origin",
+        "application",
+        "rationale"
+      ],
       "properties": {
-        "origin": { "const": "user_requested" },
-        "application": { "const": "filter" },
-        "rationale": { "type": "string", "minLength": 1 },
+        "origin": {
+          "const": "user_requested"
+        },
+        "application": {
+          "const": "filter"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
         "required_knowledge_sources": {
-          "type": "array", "items": { "type": "string" }, "uniqueItems": true
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         },
         "excluded_knowledge_sources": {
-          "type": "array", "items": { "type": "string" }, "uniqueItems": true
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         },
         "require_primary_knowledge_source": {
           "description": "Require returned edges to identify the upstream knowledge source that originally asserted the edge. This does not mean primary literature.",
           "type": "boolean",
           "default": false
         },
-        "min_publications": { "type": "integer", "minimum": 0 },
-        "min_year": { "type": "integer", "minimum": 1900 },
+        "min_publications": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_year": {
+          "type": "integer",
+          "minimum": 1900
+        },
         "agent_type": {
           "type": "array",
           "items": {
             "type": "string",
             "enum": [
-              "manual_agent", "automated_agent", "data_analysis_pipeline",
-              "computational_model", "text_mining_agent", "image_processing_agent",
-              "manual_validation_of_automated_agent", "not_provided"
+              "manual_agent",
+              "automated_agent",
+              "data_analysis_pipeline",
+              "computational_model",
+              "text_mining_agent",
+              "image_processing_agent",
+              "manual_validation_of_automated_agent",
+              "not_provided"
             ]
           },
           "uniqueItems": true
         }
       }
     },
-
     "Aggregation": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "combine": {
           "type": "string",
-          "enum": ["union", "intersection", "weighted_union", "path_priority_union"],
+          "enum": [
+            "union",
+            "intersection",
+            "weighted_union",
+            "path_priority_union"
+          ],
           "default": "union"
         },
         "deduplicate_on": {
           "type": "string",
-          "enum": ["entity_ref", "name", "resolved_id"],
+          "enum": [
+            "entity_ref",
+            "name",
+            "resolved_id"
+          ],
           "default": "resolved_id"
         },
-        "group_evidence_across_paths": { "type": "boolean", "default": true },
+        "group_evidence_across_paths": {
+          "type": "boolean",
+          "default": true
+        },
         "attach_explanations_to_candidates": {
           "description": "In hybrid mode, set true only when from_discovery explanation-query results should be attached to discovery candidates in the final output. Fixed-endpoint fallback queries do not count as candidate explanations.",
           "type": "boolean",
@@ -942,11 +1314,13 @@
         }
       }
     },
-
     "Gap": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "description"],
+      "required": [
+        "kind",
+        "description"
+      ],
       "properties": {
         "kind": {
           "type": "string",
@@ -960,17 +1334,33 @@
             "tool_cannot_constrain_predicates"
           ]
         },
-        "description": { "type": "string" },
-        "affected_path_ids": { "type": "array", "items": { "type": "string" } },
-        "affected_query_ids": { "type": "array", "items": { "type": "string" } },
-        "workaround": { "type": "string" }
+        "description": {
+          "type": "string"
+        },
+        "affected_path_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "affected_query_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "workaround": {
+          "type": "string"
+        }
       }
     },
-
     "Refusal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reason", "message"],
+      "required": [
+        "reason",
+        "message"
+      ],
       "properties": {
         "reason": {
           "type": "string",

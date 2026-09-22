@@ -1405,6 +1405,103 @@ def validate_semantics(
                 "hop and use only the explanation query instead",
             ))
 
+    if not is_refused:
+        errors.extend(_check_entities_are_used(plan, entities))
+
+    return errors
+
+
+def _referenced_entity_refs(plan: Dict[str, Any]) -> set:
+    """Every entity_ref named anywhere in the plan except the entities block.
+
+    Collected by walking the structure for keys ending in `_ref` rather than by
+    visiting each site that can hold one. The list of such sites is long and
+    grows — hop endpoints, return entities, explanation endpoint bindings,
+    from_discovery bindings, ranking scopes — and a check that has to be
+    extended every time the contract grows a field is a check that will
+    eventually be wrong in the direction of passing.
+    """
+    found: set = set()
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if isinstance(value, str) and key.endswith("_ref"):
+                    found.add(value)
+                else:
+                    walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk({k: v for k, v in plan.items() if k != "entities"})
+    return found
+
+
+def _check_entities_are_used(
+    plan: Dict[str, Any], entities: Dict[str, Dict[str, Any]],
+) -> List[ValidationError]:
+    """An entity the plan declares and never queries.
+
+    The schema checks that every entity_ref used exists. Nothing checked the
+    other direction, and the other direction is where a plan quietly stops
+    answering the question it was given.
+
+    Seen live. Asked "which drugs treat dermatitis herpetiformis by targeting
+    CFTR?", the planner declared all three concepts and then wrote a single hop
+    from the drug to CFTR. `dermatitis herpetiformis` appeared in the entity
+    list and in no path. The plan validated, executed, and returned twenty
+    well-evidenced drugs that affect CFTR — every claim about them grounded in
+    a real edge, and none of them an answer to the question asked. A grounding
+    gate cannot catch that, because nothing in the answer is ungrounded; the
+    answer is simply to a narrower question.
+
+    Only non-variable entities are checked. A variable is the shape of a thing
+    the plan is looking for, and one that nothing points at is inert; a fixed
+    entity is a concept the user named, and dropping it changes the question.
+    """
+    referenced = _referenced_entity_refs(plan)
+    errors: List[ValidationError] = []
+
+    for i, ent in enumerate(_as_list(plan.get("entities"))):
+        if not isinstance(ent, dict):
+            continue
+        ref = ent.get("entity_ref")
+        if not isinstance(ref, str) or ref in referenced:
+            continue
+        if ent.get("is_variable"):
+            continue
+
+        name = ent.get("name") or ref
+        role = ent.get("query_role") or "queried"
+
+        if role == "context":
+            # A declared omission, which is a different thing from a silent
+            # one. Q3_signature_reversal is the honest case: the query runs
+            # over the expression signature's genes, and the disease names
+            # where that signature came from. The note is required because the
+            # marker is only worth anything if setting it is a decision — an
+            # unexplained 'context' is how this check gets neutralised.
+            if not str(ent.get("notes") or "").strip():
+                errors.append(_err(
+                    f"entities/{i}/notes",
+                    f"entity '{ref}' ({name}) is marked query_role='context', which "
+                    f"exempts it from being queried; say in `notes` why the "
+                    f"question does not require querying it",
+                ))
+            continue
+
+        errors.append(_err(
+            f"entities/{i}/entity_ref",
+            f"entity '{ref}' ({name}) is declared but never used: no hop, "
+            f"explanation query or binding references it. A fixed entity names "
+            f"a concept from the question, so a plan that does not query it is "
+            f"answering something narrower than what was asked. Add the hop or "
+            f"explanation query that uses it; if the question genuinely does "
+            f"not require querying it, set query_role='context' on the entity and "
+            f"say why in its `notes`",
+        ))
+
     return errors
 
 
