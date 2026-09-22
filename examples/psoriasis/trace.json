@@ -1,0 +1,154 @@
+{
+  "schema": "loop-controller/0.1.0",
+  "question": "q:d08928560ca59a74",
+  "started_at": "2026-09-22T18:51:26.918484+00:00",
+  "outcome": {
+    "status": "answered",
+    "reason": "25 candidate(s) with supporting evidence"
+  },
+  "state": {
+    "question": "q:d08928560ca59a74",
+    "budget": {
+      "max_iterations": 4,
+      "max_planner_calls": 3,
+      "max_wall_clock_s": 1800.0,
+      "max_arax_calls": 150,
+      "max_llm_calls": 400
+    },
+    "iterations": 1,
+    "elapsed_s": 284.34,
+    "planner_calls": 1,
+    "arax_calls": 1,
+    "llm_calls": 4,
+    "llm_calls_by_component": {
+      "executor": 3,
+      "controller": 0,
+      "planner": 1
+    },
+    "tried_fingerprints": [
+      "plan:66ec2f1a1561818b"
+    ],
+    "spent_axes": [],
+    "execution_overrides": {},
+    "over_relaxations": [],
+    "attempts": [
+      {
+        "index": 1,
+        "plan_fingerprint": "plan:66ec2f1a1561818b",
+        "plan_path": "examples/psoriasis/iter1.plan.json",
+        "result_path": "examples/psoriasis/iter1.result.json",
+        "hints_path": "examples/psoriasis/iter1.hints.json",
+        "execution_overrides": {},
+        "diagnosis": {
+          "verdict": "success",
+          "outcome": "results",
+          "outcome_detail": "25 candidate(s) returned",
+          "replannable": false,
+          "num_results": 25,
+          "unresolved_entities": [],
+          "resolution_alternatives": {},
+          "unsupported_hops": [],
+          "plan_validation_errors": [],
+          "relaxation_axes": [],
+          "incomplete_coverage": [],
+          "timed_out_paths": [],
+          "concept_warning": null,
+          "evidence_availability": {
+            "P1": {
+              "pct_knowledge_level_provided": 100.0,
+              "pct_with_publications": 0.0,
+              "knowledge_level": {
+                "knowledge_assertion": 108,
+                "logical_entailment": 10
+              }
+            }
+          },
+          "thin_annotation_paths": [],
+          "filters_dropped_all": false,
+          "ungrounded_rerank_count": 0,
+          "anchor_confidence": {
+            "psoriasis": "high"
+          },
+          "anchor_category_mismatch": [],
+          "anchor_check_unavailable": null,
+          "orphan_entities": [],
+          "locked_constraints": [
+            "anchor:psoriasis"
+          ],
+          "cost": {
+            "arax_calls": 1,
+            "llm_calls": 3,
+            "elapsed_s": 211.46
+          },
+          "actionable": [],
+          "unknown_outcome": false
+        },
+        "decision": {
+          "action": "accept",
+          "rationale": "25 candidate(s) with supporting evidence",
+          "source": "policy",
+          "overridden_from": null,
+          "override_reason": null,
+          "relaxation_key": null,
+          "repair_focus": [],
+          "execution_overrides": {},
+          "expected_change": ""
+        },
+        "planner_note": null,
+        "elapsed_s": 0.0
+      }
+    ]
+  },
+  "decision_attempts": [],
+  "legality": [
+    {
+      "iteration": 1,
+      "allowed": [
+        "abandon",
+        "accept"
+      ],
+      "refusals": {
+        "repair_plan": "the executor did not mark 'results' replannable",
+        "relax_plan": "relaxing is for an empty result, and there are results",
+        "retry_execution": "nothing about this run suggests it was execution that failed",
+        "report_absence": "there are results, so there is no absence to report"
+      },
+      "relaxation_options": [],
+      "escalation": null,
+      "cautions": []
+    }
+  ],
+  "counterfactual": {
+    "per_iteration": [
+      {
+        "iteration": 1,
+        "chosen": "accept",
+        "policy_would_choose": "accept",
+        "chosen_by": "policy",
+        "agreed": true
+      }
+    ],
+    "agreement_rate": 1.0
+  },
+  "decision_maker_health": {
+    "attempts": 0,
+    "rejected_attempts": 0
+  },
+  "planner_exchanges": [
+    {
+      "kind": "plan",
+      "ok": true,
+      "refused": false,
+      "refusal_reason": null,
+      "errors": [],
+      "attempts": 1,
+      "note": ""
+    }
+  ],
+  "executor_commands": [],
+  "notes": [],
+  "warnings": [],
+  "planner_exchanges_note": "prompts and raw responses omitted; they quote the question",
+  "request_id": "b01221db029d4d0dbad0a16007177145",
+  "caller_id": "cli"
+}

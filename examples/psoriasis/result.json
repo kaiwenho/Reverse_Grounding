@@ -1,0 +1,998 @@
+{
+  "schema": "query-intake/0.1.0",
+  "status": "completed",
+  "message": "Results were found. Every statement in the answer is supported by edges present in the returned graph.",
+  "request_id": "b01221db029d4d0dbad0a16007177145",
+  "review_depth": "standard",
+  "answer": {
+    "schema": "loop-controller-answer/0.1.0",
+    "question": "Which drugs treat psoriasis?",
+    "answer_kind": "ranked_candidates",
+    "statements": [
+      {
+        "id": "S1",
+        "kind": "summary",
+        "text": "The knowledge graph returned 25 candidates.",
+        "supported_by": []
+      },
+      {
+        "id": "C1",
+        "kind": "candidate",
+        "text": "1. Ustekinumab [UNII:FU77B4U5Z0]\n     Ustekinumab [UNII:FU77B4U5Z0] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-clinicaltrials, infores:drugcentral, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "UNII:FU77B4U5Z0"
+      },
+      {
+        "id": "C2",
+        "kind": "candidate",
+        "text": "2. Anthralin [CHEBI:37510]\n     Anthralin [CHEBI:37510] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:37510--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:37510--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:37510"
+      },
+      {
+        "id": "C3",
+        "kind": "candidate",
+        "text": "3. Calcitriol [CHEBI:17823]\n     Calcitriol [CHEBI:17823] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-clinicaltrials, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:17823--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:17823--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:17823"
+      },
+      {
+        "id": "C4",
+        "kind": "candidate",
+        "text": "4. Brodalumab [UNII:6ZA31Y954Z]\n     Brodalumab [UNII:6ZA31Y954Z] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-clinicaltrials, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:UNII:6ZA31Y954Z--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:6ZA31Y954Z--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "UNII:6ZA31Y954Z"
+      },
+      {
+        "id": "C5",
+        "kind": "candidate",
+        "text": "5. Tildrakizumab [UNII:DEW6X41BEK]\n     Tildrakizumab [UNII:DEW6X41BEK] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-clinicaltrials, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:UNII:DEW6X41BEK--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:DEW6X41BEK--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "UNII:DEW6X41BEK"
+      },
+      {
+        "id": "C6",
+        "kind": "candidate",
+        "text": "6. ulobetasol propionate [CHEBI:135782]\n     ulobetasol propionate [CHEBI:135782] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:multiomics-clinicaltrials; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:135782--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:135782--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials"
+        ],
+        "subject": "CHEBI:135782"
+      },
+      {
+        "id": "C7",
+        "kind": "candidate",
+        "text": "7. Apremilast [CHEBI:78540]\n     Apremilast [CHEBI:78540] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:multiomics-clinicaltrials, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:78540"
+      },
+      {
+        "id": "C8",
+        "kind": "candidate",
+        "text": "8. Acitretin [CHEBI:50173]\n     Acitretin [CHEBI:50173] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:multiomics-clinicaltrials, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:50173"
+      },
+      {
+        "id": "C9",
+        "kind": "candidate",
+        "text": "9. Tapinarof [CHEBI:215747]\n     Tapinarof [CHEBI:215747] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:multiomics-clinicaltrials, infores:ttd; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:ttd"
+        ],
+        "subject": "CHEBI:215747"
+      },
+      {
+        "id": "C10",
+        "kind": "candidate",
+        "text": "10. Calcipotriol [CHEBI:50749]\n     Calcipotriol [CHEBI:50749] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drug-repurposing-hub, infores:drugcentral, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:50749"
+      },
+      {
+        "id": "C11",
+        "kind": "candidate",
+        "text": "11. Prednisone [CHEBI:8382]\n     Prednisone [CHEBI:8382] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:drugcentral, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:8382"
+      },
+      {
+        "id": "C12",
+        "kind": "candidate",
+        "text": "12. Hydrocortisone [CHEBI:17650]\n     Hydrocortisone [CHEBI:17650] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:drug-repurposing-hub, infores:drugcentral; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "subject": "CHEBI:17650"
+      },
+      {
+        "id": "C13",
+        "kind": "candidate",
+        "text": "13. Methylprednisolone [CHEBI:6888]\n     Methylprednisolone [CHEBI:6888] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:drug-repurposing-hub, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:6888"
+      },
+      {
+        "id": "C14",
+        "kind": "candidate",
+        "text": "14. Cortisone [CHEBI:16962]\n     Cortisone [CHEBI:16962] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:multiomics-drugapprovals, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:16962"
+      },
+      {
+        "id": "C15",
+        "kind": "candidate",
+        "text": "15. Tazarotene [CHEBI:32184]\n     Tazarotene [CHEBI:32184] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:32184--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:32184--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:32184"
+      },
+      {
+        "id": "C16",
+        "kind": "candidate",
+        "text": "16. Prednisolone [CHEBI:8378]\n     Prednisolone [CHEBI:8378] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:8378--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:8378--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:8378"
+      },
+      {
+        "id": "C17",
+        "kind": "candidate",
+        "text": "17. Betamethasone [CHEBI:3077]\n     Betamethasone [CHEBI:3077] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:3077--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:3077--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:3077"
+      },
+      {
+        "id": "C18",
+        "kind": "candidate",
+        "text": "18. Deucravacitinib [UNII:N0A21N6RAU]\n     Deucravacitinib [UNII:N0A21N6RAU] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:ttd; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:UNII:N0A21N6RAU--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:UNII:N0A21N6RAU--biolink:treats--None--None--None--MONDO:0005083--infores:ttd"
+        ],
+        "subject": "UNII:N0A21N6RAU"
+      },
+      {
+        "id": "C19",
+        "kind": "candidate",
+        "text": "19. Cyclosporine [CHEBI:4031]\n     Cyclosporine [CHEBI:4031] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drug-repurposing-hub, infores:multiomics-drugapprovals; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:4031--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:4031--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "subject": "CHEBI:4031"
+      },
+      {
+        "id": "C20",
+        "kind": "candidate",
+        "text": "20. Methoxsalen [CHEBI:18358]\n     Methoxsalen [CHEBI:18358] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:multiomics-drugapprovals, infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:18358--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:18358--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:18358"
+      },
+      {
+        "id": "C21",
+        "kind": "candidate",
+        "text": "21. Ammonia [CHEBI:16134]\n     Ammonia [CHEBI:16134] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:16134--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "subject": "CHEBI:16134"
+      },
+      {
+        "id": "C22",
+        "kind": "candidate",
+        "text": "22. trientine [CHEBI:39501]\n     trientine [CHEBI:39501] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:39501--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "subject": "CHEBI:39501"
+      },
+      {
+        "id": "C23",
+        "kind": "candidate",
+        "text": "23. Triamcinolone [CHEBI:9667]\n     Triamcinolone [CHEBI:9667] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:9667--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "subject": "CHEBI:9667"
+      },
+      {
+        "id": "C24",
+        "kind": "candidate",
+        "text": "24. Allantoin [CHEBI:15676]\n     Allantoin [CHEBI:15676] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drugcentral; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:15676--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "subject": "CHEBI:15676"
+      },
+      {
+        "id": "C25",
+        "kind": "candidate",
+        "text": "25. Diflorasone [CHEBI:59750]\n     Diflorasone [CHEBI:59750] \u2014[biolink:treats]\u2192 psoriasis [MONDO:0005083] (asserted by infores:drug-repurposing-hub; knowledge level knowledge_assertion)\n     (1 supporting path)",
+        "supported_by": [
+          "infores:retriever:CHEBI:59750--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "subject": "CHEBI:59750"
+      }
+    ],
+    "caveats": [
+      "On path P1, 0.0% of edges carry publications; most support here is curated assertion rather than cited literature.",
+      "The order of 20 candidate(s) was adjusted by a model whose stated reasons were checked against the retrieved edges (20 passed). The reasons themselves are recorded in the execution result and are not reproduced here.",
+      "Literature was checked for 49 edge(s); only quotes verified present in the retrieved abstract are shown."
+    ],
+    "candidates": [
+      {
+        "rank": 1,
+        "curie": "UNII:FU77B4U5Z0",
+        "label": "Ustekinumab",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.862,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral",
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:UNII:FU77B4U5Z0--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 2,
+        "curie": "CHEBI:37510",
+        "label": "Anthralin",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.86,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:37510--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:37510--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 3,
+        "curie": "CHEBI:17823",
+        "label": "Calcitriol",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.86,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:17823--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:17823--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 4,
+        "curie": "UNII:6ZA31Y954Z",
+        "label": "Brodalumab",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.86,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:UNII:6ZA31Y954Z--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:6ZA31Y954Z--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 5,
+        "curie": "UNII:DEW6X41BEK",
+        "label": "Tildrakizumab",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.86,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:UNII:DEW6X41BEK--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:UNII:DEW6X41BEK--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 6,
+        "curie": "CHEBI:135782",
+        "label": "ulobetasol propionate",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.86,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:135782--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:135782--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 7,
+        "curie": "CHEBI:78540",
+        "label": "Apremilast",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.858,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:78540--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 8,
+        "curie": "CHEBI:50173",
+        "label": "Acitretin",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.858,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:50173--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 9,
+        "curie": "CHEBI:215747",
+        "label": "Tapinarof",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.858,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-clinicaltrials",
+          "infores:multiomics-drugapprovals",
+          "infores:ttd"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-clinicaltrials",
+          "infores:retriever:CHEBI:215747--biolink:treats--None--None--None--MONDO:0005083--infores:ttd"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 10,
+        "curie": "CHEBI:50749",
+        "label": "Calcipotriol",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.852,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:50749--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 11,
+        "curie": "CHEBI:8382",
+        "label": "Prednisone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.852,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:8382--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 12,
+        "curie": "CHEBI:17650",
+        "label": "Hydrocortisone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.852,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:17650--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 13,
+        "curie": "CHEBI:6888",
+        "label": "Methylprednisolone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.852,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:6888--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 14,
+        "curie": "CHEBI:16962",
+        "label": "Cortisone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.852,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:16962--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 15,
+        "curie": "CHEBI:32184",
+        "label": "Tazarotene",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.85,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:32184--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:32184--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 16,
+        "curie": "CHEBI:8378",
+        "label": "Prednisolone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.85,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:8378--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:8378--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 17,
+        "curie": "CHEBI:3077",
+        "label": "Betamethasone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.85,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:3077--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral",
+          "infores:retriever:CHEBI:3077--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 18,
+        "curie": "UNII:N0A21N6RAU",
+        "label": "Deucravacitinib",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.845,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:multiomics-drugapprovals",
+          "infores:ttd"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:UNII:N0A21N6RAU--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:UNII:N0A21N6RAU--biolink:treats--None--None--None--MONDO:0005083--infores:ttd"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 19,
+        "curie": "CHEBI:4031",
+        "label": "Cyclosporine",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.845,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:4031--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub",
+          "infores:retriever:CHEBI:4031--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 20,
+        "curie": "CHEBI:18358",
+        "label": "Methoxsalen",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.845,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub",
+          "infores:multiomics-drugapprovals"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:18358--biolink:treats--None--None--None--MONDO:0005083--infores:multiomics-drugapprovals",
+          "infores:retriever:CHEBI:18358--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": true
+      },
+      {
+        "rank": 21,
+        "curie": "CHEBI:16134",
+        "label": "Ammonia",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.865,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:16134--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 22,
+        "curie": "CHEBI:39501",
+        "label": "trientine",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.865,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:39501--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 23,
+        "curie": "CHEBI:9667",
+        "label": "Triamcinolone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.865,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:9667--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 24,
+        "curie": "CHEBI:15676",
+        "label": "Allantoin",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.865,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drugcentral"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:15676--biolink:treats--None--None--None--MONDO:0005083--infores:drugcentral"
+        ],
+        "reranked": false
+      },
+      {
+        "rank": 25,
+        "curie": "CHEBI:59750",
+        "label": "Diflorasone",
+        "categories": [
+          "ChemicalEntity",
+          "ChemicalEntityOrGeneOrGeneProduct",
+          "ChemicalEntityOrProteinOrPolypeptide"
+        ],
+        "score": 1.0,
+        "num_supporting_paths": 1,
+        "mean_epc": 0.855,
+        "knowledge_levels": [
+          "knowledge_assertion"
+        ],
+        "primary_sources": [
+          "infores:drug-repurposing-hub"
+        ],
+        "publications": [],
+        "supporting_edge_ids": [
+          "infores:retriever:CHEBI:59750--biolink:treats--None--None--None--MONDO:0005083--infores:drug-repurposing-hub"
+        ],
+        "reranked": false
+      }
+    ],
+    "provenance": {
+      "executor_schema": "plan-executor-result/0.1.0",
+      "biolink_version": "4.4.3",
+      "plan_version": "0.10.0",
+      "plan_mode": "discovery",
+      "loop_iterations": 1,
+      "verdict": "success",
+      "outcome": "results",
+      "entity_resolution": {
+        "psoriasis": {
+          "query": "psoriasis",
+          "resolved_curies": [
+            "MONDO:0005083"
+          ],
+          "resolved_label": "psoriasis",
+          "confidence": "high",
+          "chosen_by_model": true,
+          "alternatives_considered": 20
+        }
+      },
+      "knowledge_sources": [
+        "infores:aact",
+        "infores:arax",
+        "infores:clinicaltrials",
+        "infores:dailymed",
+        "infores:dogpark-tier0",
+        "infores:drug-repurposing-hub",
+        "infores:drugcentral",
+        "infores:faers",
+        "infores:multiomics-clinicaltrials",
+        "infores:multiomics-drugapprovals",
+        "infores:retriever",
+        "infores:ttd"
+      ],
+      "graph": {
+        "curies": 26,
+        "labels": 45,
+        "predicates": 1,
+        "sources": 12,
+        "edges": 54,
+        "publications": 0,
+        "verified_quotes": 0,
+        "quarantined_strings": 22,
+        "query_terms": 4,
+        "resolver_candidates": 20
+      },
+      "model_assisted_steps": [
+        "entity disambiguation (choice recorded per entity, with alternatives)",
+        "candidate reranking (reasons required to cite retrieved edges; ungrounded reasons discarded)",
+        "literature quote selection (quotes verified present in the retrieved abstract before use)"
+      ]
+    },
+    "composed_by": "deterministic template renderer; no model-authored text is read or emitted, and every statement was checked against the result graph",
+    "grounding": {
+      "checked": 26,
+      "passed": 26,
+      "withheld": 0,
+      "ok": true
+    }
+  }
+}

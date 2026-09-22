@@ -1,0 +1,81 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "question": "Which drugs treat psoriasis?",
+  "plan_mode": "discovery",
+  "interpretation": {
+    "archetypes": [
+      "Q11_indication_lookup"
+    ],
+    "restated_question": "Which drugs are used to treat psoriasis?"
+  },
+  "entities": [
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any drug",
+      "biolink_category": "Drug",
+      "is_variable": true,
+      "query_role": "queried"
+    },
+    {
+      "entity_ref": "psoriasis",
+      "name": "psoriasis",
+      "biolink_category": "Disease",
+      "is_variable": false,
+      "query_role": "queried"
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1",
+      "archetype_tag": "Q11_indication_lookup",
+      "rationale": "Find drugs that are indicated to treat psoriasis.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:treats",
+          "object_ref": "psoriasis",
+          "negated": false,
+          "predicate_expansion": "descendants"
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "Drug",
+      "disabled": false
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "Only discovery evidence is used to rank candidate drugs.",
+      "discovery": {
+        "strategy": "evidence_weighted",
+        "criteria": [
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": [
+              "knowledge_assertion",
+              "logical_entailment",
+              "observation",
+              "statistical_association"
+            ],
+            "rationale": "Prefer directly asserted or observed evidence while retaining other evidence types."
+          }
+        ],
+        "top_k": 25
+      }
+    }
+  },
+  "confidence": {
+    "level": "high",
+    "reasons": [
+      "single_archetype",
+      "entities_unambiguous",
+      "predicate_recognized"
+    ]
+  }
+}
