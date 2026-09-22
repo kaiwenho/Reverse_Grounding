@@ -1,0 +1,82 @@
+{
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3",
+  "plan_mode": "discovery",
+  "plan_id": "PROBE-PRED",
+  "question": "Which chemicals are in preclinical trials for dermatitis herpetiformis?",
+  "interpretation": {
+    "archetypes": [
+      "Q11_indication_lookup"
+    ],
+    "restated_question": "Find chemicals recorded as being in preclinical trials for dermatitis herpetiformis.",
+    "intent": "discovery",
+    "assumptions": [
+      "Rewritten after the first version failed. It asked for 'preventative_for_condition', which ARAX does not model between ChemicalEntity and Disease at all, so the meta knowledge graph rejected the hop before any query ran: 'unsupported_backend_capability', replannable, repair_plan, and relaxation never reached. An unsupported triple is a plan fault, not an over-tight query.",
+      "'in_preclinical_trials_for' is taken from the list ARAX returned in that rejection, so the triple is known to be supported. Dermatitis herpetiformis is rare enough that preclinical-trial edges to it should not exist. Supported and empty is the pair every earlier probe missed."
+    ]
+  },
+  "confidence": {
+    "level": "high",
+    "reasons": [
+      "hand-written probe plan"
+    ]
+  },
+  "entities": [
+    {
+      "entity_ref": "candidate_chemical",
+      "name": "any chemical",
+      "biolink_category": "ChemicalEntity",
+      "is_variable": true
+    },
+    {
+      "entity_ref": "disease_dermatitis_herpetiformis",
+      "name": "dermatitis herpetiformis",
+      "biolink_category": "Disease",
+      "is_variable": false
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1",
+      "rationale": "Deliberately over-tight on the predicate, to force a relaxation. No qualifiers and no entity constraints, so 'predicate' is the tightest axis the executor can offer and the policy must pick it first.",
+      "hops": [
+        {
+          "subject_ref": "candidate_chemical",
+          "predicate": "biolink:in_preclinical_trials_for",
+          "object_ref": "disease_dermatitis_herpetiformis",
+          "negated": false,
+          "predicate_expansion": "descendants"
+        }
+      ],
+      "return_entity_ref": "candidate_chemical",
+      "expected_result_category": "ChemicalEntity",
+      "disabled": false
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "Probe plan: rank on evidence only, nothing clever.",
+      "discovery": {
+        "strategy": "evidence_weighted",
+        "criteria": [
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": [
+              "knowledge_assertion",
+              "logical_entailment",
+              "observation",
+              "statistical_association"
+            ],
+            "rationale": "Prefer directly asserted or observed evidence."
+          }
+        ],
+        "top_k": 25
+      }
+    }
+  }
+}

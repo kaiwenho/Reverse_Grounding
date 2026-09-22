@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loop-controller"
+version = "0.1.0"
+description = "Iterates the plan/execute loop and composes a graph-grounded answer"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    # The plan contract. The controller reads plans to fingerprint them, to
+    # find which constraints came from the user and may not be relaxed, and to
+    # validate a revision before it is executed. Install editable from a
+    # sibling checkout while both are moving:
+    #     pip install -e ../plan-core
+    # The package version (0.1.x), not the plan schema version (0.10.x) that
+    # plans carry in `plan_version`. See the note in plan-executor.
+    "plan-core>=0.1,<0.2",
+
+    "jsonschema>=4.0",  # validates the controller's own decision contract
+    "requests>=2.28",   # Ollama
+]
+
+# The planner and the executor are reached through ports, not imports.
+# plan-executor runs as a subprocess, so it is not a dependency here: the
+# controller needs its CLI on PATH or its module importable by the interpreter
+# named in ExecutorSettings, not its Python objects in this process.
+# The planner is optional; without it the controller can still execute,
+# diagnose, and compose from a hand-written plan.
+[project.optional-dependencies]
+planner = ["planner-agent"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+loop-controller = "loop_controller.run_loop:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# `schema/` sits beside `src/`, resolved relative to the package at runtime —
+# the same arrangement `plan-core` uses for its schema and Biolink model. Both
+# packages therefore expect an editable install (or PYTHONPATH) from a
+# checkout, which is how the projects are developed together.
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

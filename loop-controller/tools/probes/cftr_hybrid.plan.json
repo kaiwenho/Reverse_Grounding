@@ -1,0 +1,127 @@
+{
+  "question": "Which drugs treat dermatitis herpetiformis by targeting CFTR?",
+  "plan_mode": "hybrid",
+  "interpretation": {
+    "archetypes": [
+      "Q1_target_based"
+    ],
+    "restated_question": "Find drugs that treat dermatitis herpetiformis by targeting CFTR."
+  },
+  "entities": [
+    {
+      "entity_ref": "candidate_drug",
+      "name": "any drug",
+      "biolink_category": "Drug",
+      "is_variable": true
+    },
+    {
+      "entity_ref": "target_cftr",
+      "name": "CFTR",
+      "biolink_category": "Gene",
+      "is_variable": false,
+      "taxa": [
+        "NCBITaxon:9606"
+      ]
+    },
+    {
+      "entity_ref": "disease_dermatitis_herpetiformis",
+      "name": "dermatitis herpetiformis",
+      "biolink_category": "Disease",
+      "is_variable": false
+    }
+  ],
+  "paths": [
+    {
+      "path_id": "P1",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "Discover drugs that directly interact with the target CFTR.",
+      "hops": [
+        {
+          "subject_ref": "candidate_drug",
+          "predicate": "biolink:directly_physically_interacts_with",
+          "object_ref": "target_cftr"
+        }
+      ],
+      "return_entity_ref": "candidate_drug",
+      "expected_result_category": "Drug"
+    }
+  ],
+  "explanation_queries": [
+    {
+      "query_id": "EQ1",
+      "archetype_tag": "Q1_target_based",
+      "rationale": "Retrieve any mechanistic paths linking the fixed target CFTR to the disease dermatitis herpetiformis.",
+      "endpoint_a": {
+        "binding_type": "entity",
+        "entity_ref": "target_cftr"
+      },
+      "endpoint_b": {
+        "binding_type": "entity",
+        "entity_ref": "disease_dermatitis_herpetiformis"
+      },
+      "max_hops": 4,
+      "return": {
+        "top_k_paths": 5,
+        "rank_by": "composite",
+        "group_by_intermediate_category": true
+      }
+    }
+  ],
+  "ranking": {
+    "candidate_ranking": {
+      "explanation_influence": "none",
+      "rationale": "Rank candidate drugs solely by discovery evidence; explanations are independent.",
+      "discovery": {
+        "strategy": "evidence_weighted",
+        "criteria": [
+          {
+            "name": "knowledge_level",
+            "direction": "desc",
+            "origin": "planner_recommended",
+            "application": "rank",
+            "scope": "portable",
+            "preferred_values": [
+              "knowledge_assertion",
+              "logical_entailment",
+              "observation",
+              "statistical_association"
+            ],
+            "rationale": "Prefer directly asserted or observed evidence while retaining other evidence types."
+          }
+        ],
+        "top_k": 25
+      }
+    },
+    "explanation_ranking": {
+      "strategy": "explanation_diversity",
+      "criteria": [
+        {
+          "name": "distinct_intermediate_categories",
+          "direction": "desc",
+          "origin": "planner_recommended",
+          "application": "rank",
+          "scope": "portable",
+          "rationale": "Prefer mechanistically diverse explanation paths."
+        }
+      ],
+      "top_k": 5
+    }
+  },
+  "aggregation": {
+    "combine": "union",
+    "deduplicate_on": "resolved_id",
+    "group_evidence_across_paths": true,
+    "attach_explanations_to_candidates": false
+  },
+  "confidence": {
+    "level": "high",
+    "reasons": [
+      "single_discovery_path",
+      "fixed_target_and_disease",
+      "all_predicates_recognized",
+      "no_model_gaps"
+    ]
+  },
+  "plan_version": "0.10.0",
+  "biolink_version": "4.4.3"
+}

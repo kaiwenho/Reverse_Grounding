@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kaiwenho/Reverse_Grounding/loop-controller/schema/controller_decision.schema.json",
+  "title": "ControllerDecision",
+  "description": "One move in the plan/execute loop, chosen from the moves the policy layer declared legal for the current diagnosis and state. Structure is checked here; legality, monotone relaxation, locked constraints and budget are checked in policy.validate_decision, because none of them can be expressed against a single document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "rationale"],
+  "properties": {
+    "action": {
+      "type": "string",
+      "enum": [
+        "accept",
+        "repair_plan",
+        "relax_plan",
+        "retry_execution",
+        "report_absence",
+        "abandon"
+      ],
+      "description": "accept: serve the results. repair_plan: the plan is broken in a way the planner can fix. relax_plan: the plan is valid but over-constrained; loosen exactly one axis. retry_execution: the plan is fine and the run did not finish; re-run with looser execution settings and no planner call. report_absence: the query ran to completion and the graph has no data for it. abandon: stop without an answer."
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "Why this move, in one or two sentences, referring to the diagnosis. Written to the audit trace and never shown to a user."
+    },
+    "expected_change": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "What the next iteration should produce that this one did not. Recorded so a loop that keeps expecting the same change can be recognised as stuck."
+    },
+    "relaxation_key": {
+      "type": ["string", "null"],
+      "description": "Required for relax_plan. The key of one axis from relaxation_options, formatted path_id:axis or path_id:axis:entity_ref. Exactly one axis is loosened per iteration so that an answer found afterwards can be attributed to a specific loosened constraint."
+    },
+    "repair_focus": {
+      "type": "array",
+      "maxItems": 8,
+      "items": { "type": "string" },
+      "description": "Optional for repair_plan. Which failures the revision should address, as unresolved:<entity_ref>, unsupported:<path_id>, or invalid:<location>.",
+      "default": []
+    },
+    "execution_overrides": {
+      "type": "object",
+      "description": "Required for retry_execution. Execution settings for the re-run. Every knob must loosen: a larger timeout, a larger result cap, or a smaller skip_direct_over_hops, which decomposes a multi-hop query sooner.",
+      "additionalProperties": false,
+      "properties": {
+        "timeout": { "type": "number", "exclusiveMinimum": 0, "maximum": 3600 },
+        "skip_direct_over_hops": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "max_results": { "type": "integer", "minimum": 1, "maximum": 5000 },
+        "batch_size": { "type": "integer", "minimum": 1, "maximum": 1000 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "action": { "const": "relax_plan" } }, "required": ["action"] },
+      "then": { "required": ["relaxation_key"], "properties": { "relaxation_key": { "type": "string", "minLength": 1 } } }
+    },
+    {
+      "if": { "properties": { "action": { "const": "retry_execution" } }, "required": ["action"] },
+      "then": { "required": ["execution_overrides"], "properties": { "execution_overrides": { "minProperties": 1 } } }
+    }
+  ]
+}
