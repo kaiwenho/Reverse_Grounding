@@ -406,7 +406,12 @@ class LLMAgent:
                 f"\nThe plan allows these category groups to be treated as "
                 f"interchangeable: {list(conflation)}. A gene and its protein "
                 f"product, or a drug and its active molecule, count as the "
-                f"same concept under that setting."
+                f"same concept under that setting. The expected category "
+                f"above is then a hint, not a requirement, and a candidate "
+                f"of the sibling form is a correct answer. If the question "
+                f"itself names one form — \"the TNF protein\", \"the gene\", "
+                f"\"the mRNA\" — prefer a candidate of that form when one is "
+                f"listed."
             )
 
         user = f"""A query plan needs one identifier for an entity it refers to.

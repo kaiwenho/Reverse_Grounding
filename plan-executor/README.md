@@ -37,6 +37,20 @@ If the LLM is unavailable, the run stops. It does not fall back to the first
 candidate. A plan may also provide an identifier directly or refer to an
 external input.
 
+An entity the plan types as `Gene` or `Protein` is looked up as either, and
+the LLM is told the two forms count as one concept. Without that, a plan
+naming `Protein` sends a `biolink:Protein` filter to the name resolver, and
+the LLM is told to reject anything that comes back typed otherwise — so
+`NCBIGene:7124` is not an available answer for "TNF" even when it is the only
+correct one, and the run fails on a name the graph knows perfectly well. The
+graph draws no such line: the node normalizer treats a gene and its product
+as one entity, and target edges are indexed against genes far more often than
+proteins. The LLM still chooses, and the question is in its prompt, so a
+question that names the protein can still get the protein when one is
+indexed. Which flags applied to an entity is recorded per entity under
+`resolution.<ref>.conflation`. `--no-default-conflation` turns this off and
+restores the exact-category behavior, which is what older runs used.
+
 ### Evidence-grounded reranking
 
 The LLM may reorder leading candidates. Each reason it gives must cite
@@ -222,7 +236,8 @@ a plan error.
 | `--no-verify-literature` | Skip abstract verification |
 | `--no-rerank` | Keep the order produced by the plan's ranking rules |
 | `--taxon NCBITaxon:10090` | Resolve genes in another species; human is the default |
-| `--conflate gene_protein` | Treat a gene and its protein product as one concept |
+| `--conflate drug_chemical` | Treat a drug and its active molecule as one concept. `gene_protein` is already applied by default |
+| `--no-default-conflation` | Turn that default off, pinning a Gene or Protein entity to the exact category the plan named |
 | `--timeout 3` | Set the query timeout; a short value can test decomposition |
 | `--skip-direct-over-hops 3` | Decompose long paths without waiting for a direct-query timeout |
 | `--dump-queries FILE` | Save the exact TRAPI queries sent to ARAX |

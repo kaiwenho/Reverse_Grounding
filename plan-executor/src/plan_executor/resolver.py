@@ -352,6 +352,14 @@ def conflation_from_plan(plan, override: Optional[Sequence[str]] = None) -> List
     Accepts several shapes because the planner's field is still settling: a
     list of flag names, or a mapping of flag -> bool. An explicit override
     always wins.
+
+    NOTE: as of this writing no plan can reach any of these three places.
+    plan-core's schema sets `additionalProperties: false` at the top level
+    and inside `interpretation`, and declares no `conflation` field in
+    either, so a plan carrying one fails validation before it gets here.
+    In practice this function returns the override or nothing. Per-entity
+    defaults are applied separately, in `EntityResolver.DEFAULT_CONFLATION`;
+    do not assume a plan can turn conflation on until the schema says so.
     """
     if override is not None:
         return list(override)
@@ -434,6 +442,16 @@ class Resolution:
     llm_attempts: int = 0
     alias_used: Optional[str] = None
     conflation: List[str] = field(default_factory=list)
+
+    #: Every category that was allowed to satisfy `expected_category` on this
+    #: entity, conflation included. Stated rather than left to be recomputed:
+    #: a reader that re-derives it needs both the flags and the group table,
+    #: and the loop controller has neither. Without this field the controller
+    #: compares a resolved gene against a plan that said Protein, calls it a
+    #: mismatch, and repairs a plan that was answered correctly — which is
+    #: exactly what it did. Empty for a variable or plan-supplied entity,
+    #: where nothing was accepted because nothing was looked up.
+    accepted_categories: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     elapsed_s: float = 0.0
 
@@ -462,6 +480,7 @@ class Resolution:
             "llm_attempts": self.llm_attempts,
             "alias_used": self.alias_used,
             "conflation": self.conflation,
+            "accepted_categories": self.accepted_categories,
             "considered": [c.to_dict() for c in self.candidates],
             "warnings": self.warnings,
             "elapsed_s": round(self.elapsed_s, 2),
@@ -530,7 +549,26 @@ class EntityResolver:
             confirmation turns a silent wrong anchor into a clear rejection.
         llm_retries: retries before raising `LLMUnavailableError`.
         conflation: override the plan's conflation flags.
+        default_conflation: apply `DEFAULT_CONFLATION` to entities whose
+            category falls in one of those groups. Defaults to True. Set
+            False to reproduce a run made before this default existed.
     """
+
+    #: Conflation groups applied automatically, per entity, when that
+    #: entity's own category belongs to the group.
+    #:
+    #: A plan cannot ask for conflation: `conflation_from_plan` reads three
+    #: places on the plan and the schema forbids all of them, so the flags
+    #: were only ever reachable from the command line. Without a default, a
+    #: category of Gene pins the lookup to genes and a category of Protein
+    #: pins it to proteins, and the LLM is then told to reject anything of
+    #: the other form. The graph does not draw that line — the node
+    #: normalizer treats a gene and its product as one concept, and target
+    #: edges are indexed against genes far more often than proteins — so the
+    #: pin loses real answers. `drug_chemical` is deliberately not defaulted
+    #: on; it has not been shown to be needed, and one behaviour change at a
+    #: time is testable.
+    DEFAULT_CONFLATION: Sequence[str] = ("gene_protein",)
 
     def __init__(
         self,
@@ -542,6 +580,7 @@ class EntityResolver:
         llm_retries: int = DEFAULT_LLM_RETRIES,
         llm_backoff_s: float = DEFAULT_LLM_BACKOFF_S,
         conflation: Optional[Sequence[str]] = None,
+        default_conflation: bool = True,
         input_registry: Optional[Dict[str, Any]] = None,
         mock_lookup: Optional[Callable] = None,
         verbose: bool = True,
@@ -556,6 +595,7 @@ class EntityResolver:
         self.llm_retries = llm_retries
         self.llm_backoff_s = llm_backoff_s
         self.conflation_override = conflation
+        self.default_conflation = default_conflation
         #: input_ref -> identifiers, supplied by the caller for entities bound
         #: to external inputs.
         self.input_registry = dict(input_registry or {})
@@ -739,6 +779,27 @@ class EntityResolver:
 
     # -- entity resolution -------------------------------------------------
 
+    def _effective_conflation(
+        self, category: str, conflation: Sequence[str],
+    ) -> List[str]:
+        """Conflation flags for one entity: the plan's, plus any default.
+
+        Per-entity rather than per-plan, and only for an entity whose own
+        category is in the group: a Disease or ChemicalEntity anchor in the
+        same plan is left exactly as it was.
+        """
+        out = list(conflation)
+        if not self.default_conflation:
+            return out
+        bare = (category or "").replace("biolink:", "")
+        if not bare:
+            return out
+        for flag in self.DEFAULT_CONFLATION:
+            group = CONFLATION_GROUPS.get(flag) or set()
+            if bare in group and flag not in out:
+                out.append(flag)
+        return out
+
     def resolve_entity(
         self,
         entity,
@@ -789,7 +850,21 @@ class EntityResolver:
             res.elapsed_s = time.time() - start
             return res
 
+        # Defaults are applied here, after the early returns: a variable
+        # entity is never looked up, and a supplied CURIE is the plan
+        # author's decision, so neither should carry a flag that had no
+        # effect on it. The ledger's `conflation` field records what
+        # actually applied to this entity, default included.
+        conflation = self._effective_conflation(category, conflation)
+        if list(conflation) != list(res.conflation):
+            self.log(
+                f"{ref}: conflation {list(conflation)} "
+                f"(category {category or 'unspecified'})"
+            )
+        res.conflation = list(conflation)
+
         acceptable = acceptable_categories(category, conflation)
+        res.accepted_categories = sorted(acceptable)
 
         # Under conflation a server-side type filter would exclude valid
         # siblings, so filtering happens locally instead.

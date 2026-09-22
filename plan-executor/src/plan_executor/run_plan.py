@@ -233,6 +233,7 @@ class Runner:
             mock_lookup=self._mock_lookup if self.args.mock else None,
             confirm_single=not self.args.no_confirm_single,
             conflation=self.args.conflate or None,
+            default_conflation=self.args.default_conflation,
             verbose=self.verbose,
         )
         try:
@@ -632,7 +633,16 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
                         "--taxon '' to allow any species.")
     g.add_argument("--conflate", action="append", default=[],
                    choices=["gene_protein", "drug_chemical"],
-                   help="treat these category groups as interchangeable")
+                   help="treat these category groups as interchangeable. "
+                        "gene_protein is already applied to Gene/Protein "
+                        "entities by default; see --no-default-conflation")
+    g.add_argument("--no-default-conflation", dest="default_conflation",
+                   action="store_false",
+                   help="do not apply gene_protein conflation automatically "
+                        "to Gene/Protein entities. A plan's category then "
+                        "pins the lookup to one molecular form, which is how "
+                        "this behaved before the default existed; use it to "
+                        "reproduce an older run.")
     g.add_argument("--no-rerank", dest="rerank", action="store_false",
                    help="skip the LLM rerank; the plan's criteria decide order")
     g.add_argument("--no-explain", dest="explain", action="store_false",

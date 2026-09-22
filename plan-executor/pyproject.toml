@@ -16,7 +16,12 @@ dependencies = [
     # predicate, return nothing, and look identical to a genuine absence of
     # data. Install editable from a sibling checkout while both are moving:
     #     pip install -e ../plan-core
-    "plan-core>=0.10,<0.11",
+    # The *package* version, which is 0.1.x. This used to read >=0.10,<0.11,
+    # which is the *plan schema* version the plans carry in `plan_version`.
+    # Two different numbers that both look like a version of plan-core. The
+    # mistake never surfaced because everything was run from PYTHONPATH, where
+    # no version is checked; a clean `pip install -e` could not resolve it.
+    "plan-core>=0.1,<0.2",
 
     "requests>=2.28",   # ARAX, name resolution, Ollama
     "httpx>=0.24",      # publication metadata service, which is async-only
@@ -25,5 +30,17 @@ dependencies = [
 [project.scripts]
 plan-executor = "plan_executor.run_plan:main"
 
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Tests here run without network or an LLM: `EntityResolver` takes a
+# `mock_lookup` in place of the Name Resolver and any object with a
+# `choose()` in place of the model, so resolution logic is testable on its
+# own. plan-core must be importable — editable install, or
+#     PYTHONPATH=../plan-core/src python -m pytest
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
