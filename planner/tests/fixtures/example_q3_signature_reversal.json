@@ -4,7 +4,9 @@
   "question": "Using the available input tnbc_signature, a directional human gene signature for triple-negative breast cancer, which drugs are predicted to reverse it?",
   "plan_mode": "discovery",
   "interpretation": {
-    "archetypes": ["Q3_signature_reversal"],
+    "archetypes": [
+      "Q3_signature_reversal"
+    ],
     "intent": "discovery",
     "restated_question": "Find drugs whose per-gene expression effects are opposite to the disease signature of triple-negative breast cancer.",
     "assumptions": [
@@ -17,13 +19,17 @@
       "entity_ref": "disease_x",
       "name": "triple-negative breast cancer",
       "biolink_category": "Disease",
-      "is_variable": false
+      "is_variable": false,
+      "notes": "Signature reversal queries the disease's expression signature, not the disease itself: the drug-gene paths carry the query and this entity records which disease the signature came from.",
+      "query_role": "context"
     },
     {
       "entity_ref": "sig_increased_gene",
       "name": "genes increased in the supplied disease signature",
       "biolink_category": "Gene",
-      "taxa": ["NCBITaxon:9606"],
+      "taxa": [
+        "NCBITaxon:9606"
+      ],
       "is_variable": false,
       "input_binding": {
         "binding_type": "external_input",
@@ -36,7 +42,9 @@
       "entity_ref": "sig_decreased_gene",
       "name": "genes decreased in the supplied disease signature",
       "biolink_category": "Gene",
-      "taxa": ["NCBITaxon:9606"],
+      "taxa": [
+        "NCBITaxon:9606"
+      ],
       "is_variable": false,
       "input_binding": {
         "binding_type": "external_input",
@@ -115,7 +123,12 @@
             "origin": "planner_recommended",
             "application": "rank",
             "scope": "portable",
-            "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+            "preferred_values": [
+              "knowledge_assertion",
+              "logical_entailment",
+              "observation",
+              "statistical_association"
+            ],
             "rationale": "Prefer directly asserted or observed supporting edges without excluding predictive evidence."
           },
           {
@@ -143,7 +156,12 @@
       "feature": "knowledge_level",
       "origin": "planner_recommended",
       "application": "report",
-      "preferred_values": ["knowledge_assertion", "logical_entailment", "observation", "statistical_association"],
+      "preferred_values": [
+        "knowledge_assertion",
+        "logical_entailment",
+        "observation",
+        "statistical_association"
+      ],
       "rationale": "Expose the knowledge-level metadata used by ranking while retaining all evidence types."
     }
   ],
@@ -165,7 +183,10 @@
     {
       "kind": "biolink_predicate_missing",
       "description": "Biolink has no predicate for a gene-expression signature object or for 'reverses signature' as a single relation.",
-      "affected_path_ids": ["P1_reverse_increased", "P2_reverse_decreased"],
+      "affected_path_ids": [
+        "P1_reverse_increased",
+        "P2_reverse_decreased"
+      ],
       "workaround": "Bind each direction_filter partition of tnbc_signature to a fixed Gene entity, then decompose reversal into per-gene opposite-direction `affects` edges with an expression aspect qualifier and aggregate the returned support outside ordinary KG traversal."
     }
   ],

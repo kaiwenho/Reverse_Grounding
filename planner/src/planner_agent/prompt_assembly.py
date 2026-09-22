@@ -374,6 +374,16 @@ Hard rules:
     flag to true ONLY for candidate fan-out through `from_discovery`. Omit it or
     set it to false for fixed-endpoint fallbacks and plans without candidate
     explanations.
+30. Every entity you declare must be used. A fixed entity names a concept from
+   the question, so if no hop, explanation query or binding references it, the
+   query you built left that concept out, and any results answer something
+   narrower than what was asked. Add the hop or the open `explanation_query`
+   that uses it. When the question genuinely does not require querying it — as
+   in signature reversal, where the disease names the source of the expression
+   signature while the query runs over its genes — set `query_role="context"`
+   on that entity and say why in its `notes`. Never set `query_role="context"`
+   on a concept the question asks you to query; an unexplained one is rejected.
+   (This is not the removed `Entity.role` field of rule 10, which stays banned.)
 """
 
 
