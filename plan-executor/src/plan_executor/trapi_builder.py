@@ -210,6 +210,13 @@ class HopStep:
     `pinned_ref` is the endpoint whose CURIEs are known when this step runs —
     either a plan anchor or the output of an earlier step. `solve_ref` is the
     endpoint this step discovers.
+
+    A `closing` step is different: both endpoints are already known, so it
+    discovers nothing. It verifies pairs, and must be queried with *both* ends
+    pinned. Run with the far end open, a closing hop whose far end is an anchor
+    returns that relationship to any entity at all — `drug -treats-> ?` instead
+    of `drug -treats-> MONDO:0015614` — and the join then binds the anchor to
+    whatever came back.
     """
 
     order: int
@@ -219,12 +226,14 @@ class HopStep:
     solve_ref: str
     source: str                     # 'anchor' | 'previous_step'
     pinned_is_subject: bool
+    closing: bool = False
 
     def __repr__(self) -> str:
         arrow = "->" if self.pinned_is_subject else "<-"
+        kind = ", closing" if self.closing else ""
         return (
             f"<HopStep {self.order}: {self.pinned_ref} {arrow} {self.solve_ref} "
-            f"(hop {self.hop_index}, from {self.source})>"
+            f"(hop {self.hop_index}, from {self.source}{kind})>"
         )
 
 
@@ -559,6 +568,7 @@ def plan_decomposition(
                 solve_ref=hop.object_ref,
                 source="previous_step",
                 pinned_is_subject=True,
+                closing=True,
             )
         )
         order += 1

@@ -111,6 +111,12 @@ class StepResult:
     pinned_count: int = 0
     elapsed_s: float = 0.0
     errors: List[str] = field(default_factory=list)
+    #: True when the query pinned the solve end as well, so the backend has
+    #: already restricted what that end can bind to.
+    solve_pinned: bool = False
+    #: Pairs the join refused because they bound an anchor to a CURIE the
+    #: resolver did not choose. Nonzero means a hop ran with an anchor end open.
+    anchor_rejections: int = 0
 
     @property
     def solved_curies(self) -> List[str]:
@@ -132,6 +138,9 @@ class StepResult:
             "pinned_ref": self.step.pinned_ref,
             "solve_ref": self.step.solve_ref,
             "source": self.step.source,
+            "closing": getattr(self.step, "closing", False),
+            "solve_pinned": self.solve_pinned,
+            "anchor_rejections": self.anchor_rejections,
             "outcome": self.outcome,
             "pinned_count": self.pinned_count,
             "solved_count": len(self.solved_curies),
@@ -438,8 +447,10 @@ class PathExecutor:
                         "direct query returned nothing; hops were run "
                         "separately to identify which one is empty"
                     )
+                    direct_state = self._localization_snapshot(execution)
                     self._run_decomposition(execution, path, entities, resolutions)
                     execution.mode = "direct_then_localized"
+                    self._keep_direct_absence(execution, direct_state)
 
                 self._bind_return(execution)
                 execution.elapsed_s = time.time() - start
@@ -464,6 +475,62 @@ class PathExecutor:
         self._bind_return(execution)
         execution.elapsed_s = time.time() - start
         return execution
+
+    # -- localization -------------------------------------------------------
+
+    @staticmethod
+    def _localization_snapshot(execution: PathExecution) -> Dict[str, Any]:
+        """The direct query's verdict fields, before localization touches them."""
+        return {
+            "verdict": execution.verdict,
+            "failure_kind": execution.failure_kind,
+            "coverage_complete": execution.coverage_complete,
+            "error_message": execution.error_message,
+        }
+
+    def _keep_direct_absence(
+        self, execution: PathExecution, direct: Dict[str, Any],
+    ) -> None:
+        """Stop a diagnostic run that did not finish from overturning an answer.
+
+        Localization runs the hops separately only to find *where* an empty
+        chain breaks. When the direct query was a complete, trustworthy empty
+        result, that is the answer: the closing hop now re-asks a strict
+        subset of the same question, so it cannot legitimately find more. If
+        the localization times out or errors, it has established nothing, and
+        reporting the path as `inconclusive` would discard a real absence on
+        the strength of a diagnostic that never completed.
+
+        What localization did establish is kept. If earlier steps returned
+        data, the step that failed is the first hop not confirmed to hold
+        any, which is a better place to aim relaxation than the direct query's
+        default of hop 0.
+        """
+        if direct["verdict"] != VERDICT_NO_ANSWER:
+            return
+        if execution.verdict not in (
+            VERDICT_INCONCLUSIVE, VERDICT_ERROR, VERDICT_UNEXECUTABLE,
+        ):
+            return
+
+        stalled = execution.verdict
+        execution.verdict = direct["verdict"]
+        execution.failure_kind = direct["failure_kind"]
+        execution.coverage_complete = direct["coverage_complete"]
+        execution.error_message = direct["error_message"]
+        where = (
+            f" at step {execution.failed_at_step}; hop "
+            f"{execution.failed_at_hop} is the first hop not confirmed to "
+            f"hold data"
+            if execution.failed_at_hop is not None
+            else "; the break was not located"
+        )
+        execution.coverage_notes.append(
+            f"localization ended {stalled}{where}. The direct query's "
+            f"complete empty answer stands."
+        )
+        self.log(f"{execution.path_id}: localization {stalled}; keeping the "
+                 f"direct no_answer")
 
     @staticmethod
     def _bind_return(execution: PathExecution) -> None:
@@ -599,7 +666,29 @@ class PathExecutor:
                 )
                 return
 
-            result = self._run_step(step, entities, pinned, execution)
+            # A closing hop verifies pairs between two entities that are both
+            # already known, so both ends are pinned. Left open, the far end
+            # binds to anything the relationship reaches, and an anchor such as
+            # a disease is silently replaced by whatever disease came back.
+            solve_ids: Optional[List[str]] = None
+            if getattr(step, "closing", False):
+                solve_ids = known.get(step.solve_ref) or []
+                if not solve_ids:
+                    execution.verdict = VERDICT_INCONCLUSIVE
+                    execution.failed_at_step = step.order
+                    execution.failed_at_hop = step.hop_index
+                    execution.coverage_complete = False
+                    execution.coverage_notes.append(
+                        f"step {step.order} closes the path on "
+                        f"'{step.solve_ref}', which has no CURIEs to pin; the "
+                        f"hop was not run open-ended because that would let "
+                        f"'{step.solve_ref}' bind to anything"
+                    )
+                    return
+
+            result = self._run_step(
+                step, entities, pinned, execution, solve_ids=solve_ids,
+            )
             execution.steps.append(result)
 
             if result.outcome == OUTCOME_TIMEOUT:
@@ -694,6 +783,13 @@ class PathExecutor:
                      f"from {result.pinned_count} '{step.pinned_ref}'")
 
         execution.instances = self._chain_steps(execution.steps, resolutions)
+        for sr in execution.steps:
+            if sr.anchor_rejections:
+                execution.warnings.append(
+                    f"step {sr.step.order}: {sr.anchor_rejections} pair(s) "
+                    f"dropped for binding anchor '{sr.step.solve_ref}' to a "
+                    f"CURIE the resolver did not choose"
+                )
         self._bind_return(execution)
 
         # Every hop returned bindings but no chain survived the join: the hops
@@ -760,20 +856,26 @@ class PathExecutor:
         entities: Dict[str, Any],
         pinned: Sequence[str],
         execution: PathExecution,
+        solve_ids: Optional[Sequence[str]] = None,
     ) -> StepResult:
-        """Run one hop across every batch of pinned intermediates."""
+        """Run one hop across every batch of pinned intermediates.
+
+        `solve_ids` pins the far end as well, for a closing hop. Only the
+        pinned end is batched; the far end is the same short list each time.
+        """
         start = time.time()
         batches = batch_ids(pinned, self.batch_size)
         result = StepResult(
             step=step, outcome=OUTCOME_EMPTY,
             batches_total=len(batches), pinned_count=len(set(pinned)),
+            solve_pinned=bool(solve_ids),
         )
 
         any_success = False
         n_timeout = 0
         n_error = 0
         for i, batch in enumerate(batches):
-            built = build_step_query(step, entities, batch)
+            built = build_step_query(step, entities, batch, solve_ids=solve_ids)
             # Each step re-derives the same conditions for the entities it
             # touches; deduplicated so a filter is not counted once per batch.
             for pc in built.post_conditions:
@@ -912,6 +1014,19 @@ class PathExecutor:
                     # rather than introducing a second value for one entity.
                     existing = bindings.get(step.solve_ref)
                     if existing is not None and existing != s_curie:
+                        continue
+                    # An anchor binds only to what the resolver chose. When the
+                    # query pinned this end the backend already enforced that
+                    # (subclass matches included), so the check applies only
+                    # to an end that was left open — which should never happen
+                    # for an anchor, and is counted if it does.
+                    anchor_ids = resolutions.get(step.solve_ref)
+                    if (
+                        anchor_ids
+                        and not sr.solve_pinned
+                        and s_curie not in anchor_ids
+                    ):
+                        sr.anchor_rejections += 1
                         continue
                     new_bindings = dict(bindings)
                     new_bindings[step.solve_ref] = s_curie
